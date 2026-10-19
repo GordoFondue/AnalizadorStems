@@ -4,16 +4,16 @@ import os
 class GestorBaseDatos:
     def __init__(self, ruta_db="patrones_musicales.db"):
         self.ruta_db = ruta_db
-        self._inicializar_db()
+        self.inicializar_db()
 
-    def _ejecutar_consulta(self, query, parametros=()):
+    def ejecutar_consulta(self, query, parametros=()):
         with sqlite3.connect(self.ruta_db) as conexion:
             cursor = conexion.cursor()
             cursor.execute(query, parametros)
             conexion.commit()
             return cursor
 
-    def _inicializar_db(self):
+    def inicializar_db(self):
         query = """
         CREATE TABLE IF NOT EXISTS pistas_entrenamiento (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,10 +28,10 @@ class GestorBaseDatos:
             fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-        self._ejecutar_consulta(query)
-        self._actualizar_esquema_si_existe()
+        self.ejecutar_consulta(query)
+        self.actualizar_esquema()
 
-    def _actualizar_esquema_si_existe(self):
+    def actualizar_esquema(self):
         columnas_nuevas = [
             ("sintaxis_voz", "TEXT DEFAULT ''"),
             ("sintaxis_bajo", "TEXT DEFAULT ''"),
@@ -55,7 +55,7 @@ class GestorBaseDatos:
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """
-        self._ejecutar_consulta(
+        self.ejecutar_consulta(
             query, 
             (nombre_pista, bpm, golpes, cadena_bateria, cadena_voz, cadena_bajo, cadena_otros, genero)
         )
@@ -75,3 +75,12 @@ class GestorBaseDatos:
                 print(f"[+] [Base de Datos] Se eliminó con éxito el registro de '{nombre}'.")
             else:
                 print("[-] [Base de Datos] La tabla está vacía, no hay nada que borrar.")
+    def entrenamiento(self):
+        query = """
+        SELECT sintaxis_bateria, sintaxis_voz, sintaxis_bajo, sintaxis_otros, genero 
+        FROM pistas_entrenamiento
+        """
+        with sqlite3.connect(self.ruta_db) as conexion:
+            cursor = conexion.cursor()
+            cursor.execute(query)
+            return cursor.fetchall()

@@ -6,12 +6,14 @@ from modulos.bajo import AnalizadorBajo
 from modulos.otros import AnalizadorOtros
 from modulos.simbolico import PreprocesadorSimbolico
 from modulos.database import GestorBaseDatos
+from modulos.modeloHMM import ClasificadorEstructuraHMM
 
 class AplicacionCLI:
     def __init__(self):
         self.separador = MotorSeparacion()
         self.stems = None
         self.resultados_analisis = None
+        self.genero_predicho_hmm = None
 
     def iniciar(self):
         print("="*60)
@@ -27,9 +29,9 @@ class AplicacionCLI:
             return
 
         if self.stems:
-            self._menu_procesamiento_inicial()
+           self.menu_inicial()
 
-    def _menu_procesamiento_inicial(self):
+    def menu_inicial(self):
         while True:
             print("\n" + "="*50)
             print("        FASE 1: PROCESAMIENTO Y ANÁLISIS")
@@ -41,8 +43,8 @@ class AplicacionCLI:
             opcion = input("[>] Elige una opción: ")
             
             if opcion == "1":
-                self._analizar_cancion_completa()
-                self._menu_consulta_resultados()
+                self.analizar_cancion()
+                self.menu_consultas()
                 break
             elif opcion == "2":
                 print("[*] Cerrando el sistema...")
@@ -50,12 +52,12 @@ class AplicacionCLI:
             else:
                 print("[-] Opción inválida. Elige 1 para analizar.")
 
-    def _analizar_cancion_completa(self):
+    def analizar_cancion(self):
         print("\n" + "="*60)
         print("   EJECUTANDO ANÁLISIS UNIFICADO DE LOS 4 STEMS...")
         print("="*60)
         
-        print("\n[1/4] Procesando Batería (BPM, Golpes y Ritmo)...")
+        print("\nProcesando Batería (BPM, Golpes y Ritmo)...")
         analizador_perc = AnalizadorPercusion(self.stems["bateria"])
         bpm, tiempos = analizador_perc.extraer_bpm_y_golpes()
         sec_bateria = analizador_perc.extraer_secuencia_temporal(ventana_segundos=10)
@@ -65,7 +67,7 @@ class AplicacionCLI:
             traductor_bat = PreprocesadorSimbolico(numero_estados=3)
             cadena_bat = traductor_bat.transformar_a_simbolos(sec_bateria)
 
-        print("\n[2/4] Procesando Voz (Energía RMS y Textura ZCR)...")
+        print("\nProcesando Voz (Energía RMS y Textura ZCR)...")
         analizador_v = AnalizadorVoz(self.stems["voz"])
         sec_voz = analizador_v.extraer_secuencia_temporal(ventana_segundos=10)
         
@@ -75,7 +77,7 @@ class AplicacionCLI:
             traductor_voz.alfabeto = ['X', 'Y', 'Z']
             cadena_voz = traductor_voz.transformar_a_simbolos(sec_voz)
 
-        print("\n[3/4] Procesando Bajo (Frecuencia pYIN F0 y Energía)...")
+        print("\nProcesando Bajo (Frecuencia pYIN F0 y Energía)...")
         analizador_b = AnalizadorBajo(self.stems["bajo"])
         sec_bajo = analizador_b.extraer_secuencia_temporal(ventana_segundos=10)
         
@@ -85,7 +87,7 @@ class AplicacionCLI:
             traductor_bajo.alfabeto = ['B1', 'B2', 'B3']
             cadena_bajo = traductor_bajo.transformar_a_simbolos(sec_bajo)
 
-        print("\n[4/4] Procesando Otros Instrumentos (MFCC_1 y Centroide Espectral)...")
+        print("\nProcesando Otros Instrumentos (MFCC_1 y Centroide Espectral)...")
         analizador_o = AnalizadorOtros(self.stems["otros"])
         sec_otros = analizador_o.extraer_secuencia_temporal(ventana_segundos=10)
         
@@ -122,22 +124,23 @@ class AplicacionCLI:
         
         print("\n[+] ¡Análisis unificado completado con éxito!")
 
-    def _menu_consulta_resultados(self):
+    def menu_consultas(self):
         while True:
             print("\n" + "="*50)
-            print("        FASE 2: CONSULTA DE RESULTADOS")
+            print("CONSULTA Y CLASIFICACIÓN HMM")
             print("="*50)
             print("1. Ver análisis de BATERÍA")
             print("2. Ver análisis de VOZ")
             print("3. Ver análisis de BAJO")
             print("4. Ver análisis de OTROS INSTRUMENTOS")
             print("5. Ver RESUMEN GENERAL (Sintaxis de los 4 stems)")
-            print("6. Guardar análisis en la Base de Datos")
-            print("7. Deshacer último registro en la BD")
-            print("8. Salir / Cargar otra canción")
+            print("6. Clasificar Género de la Canción con HMM")
+            print("7. Guardar análisis en la Base de Datos")
+            print("8. Deshacer último registro en la BD")
+            print("9. Salir / Cargar otra canción")
             print("="*50)
             
-            opcion = input("[>] Selecciona el análisis que deseas ver (1-8): ")
+            opcion = input("[>] Selecciona una opción (1-9): ")
             
             if opcion == "1":
                 self._ver_detalle_instrumento("bateria")
@@ -148,17 +151,19 @@ class AplicacionCLI:
             elif opcion == "4":
                 self._ver_detalle_instrumento("otros")
             elif opcion == "5":
-                self._ver_resumen_general()
+                self.resumen()
             elif opcion == "6":
-                self._guardar_en_bd()
+                self.clasificar_hmm()
             elif opcion == "7":
+                self.guardar_en_bd()
+            elif opcion == "8":
                 db = GestorBaseDatos()
                 db.borrar_ultimo_registro()
-            elif opcion == "8":
-                print("[*] Saliendo del menú de consulta...")
+            elif opcion == "9":
+                print("Saliendo del menú de consulta...")
                 break
             else:
-                print("[-] Opción inválida. Intenta nuevamente.")
+                print("Opción inválida. Intenta nuevamente.")
 
     def _ver_detalle_instrumento(self, clave):
         datos = self.resultados_analisis[clave]
@@ -174,9 +179,9 @@ class AplicacionCLI:
             datos["traductor"].mostrar_calculos_probabilidad(datos["secuencia"])
             datos["traductor"].graficar_y_explicar_clusters(datos["secuencia"])
 
-    def _ver_resumen_general(self):
+    def resumen(self):
         print("\n" + "="*60)
-        print("   SINTAXIS MULTICHANNEL COMPLETA DE LA CANCIÓN (GMM)")
+        print("  SINTAXIS MULTICHANNEL COMPLETA DE LA CANCIÓN (GMM)")
         print("="*60)
         print(f"BATERÍA : {self.resultados_analisis['bateria']['cadena']}")
         print(f"VOZ     : {self.resultados_analisis['voz']['cadena']}")
@@ -184,8 +189,45 @@ class AplicacionCLI:
         print(f"OTROS   : {self.resultados_analisis['otros']['cadena']}")
         print("="*60)
 
-    def _guardar_en_bd(self):
-        genero = input("[>] Ingresa el género real de la canción (Ej. Rock, Pop, Electronica): ")
+    def clasificar_hmm(self):
+        print("\n" + "="*60)
+        print("   CLASIFICACIÓN DE GÉNERO MEDIANTE HMM (LOG-LIKELIHOOD)")
+        print("="*60)
+        
+        db = GestorBaseDatos()
+        registros = db.obtener_secuencias_entrenamiento()
+        
+        if not registros:
+            print("[-] No hay registros almacenados en la base de datos para entrenar el HMM.")
+            print("    Por favor, guarda primero varias canciones clasificadas usando la opción 7.")
+            return
+
+        clasificador_hmm = ClasificadorEstructuraHMM(numero_estados_ocultos=3)
+        clasificador_hmm.entrenar_modelos(registros)
+
+        bateria = self.resultados_analisis["bateria"]["cadena"]
+        voz = self.resultados_analisis["voz"]["cadena"]
+        bajo = self.resultados_analisis["bajo"]["cadena"]
+        otros = self.resultados_analisis["otros"]["cadena"]
+
+        genero, probabilidades = clasificador_hmm.predecir_genero(bateria, voz, bajo, otros)
+        self.genero_predicho_hmm = genero
+
+        print("\n--- RESULTADOS DE VEROSIMILITUD POR GÉNERO ---")
+        for g, score in probabilidades.items():
+            print(f"  • Género '{g}': Log-Likelihood = {score:.4f}")
+            
+        print(f"\n[+] GÉNERO PREDICHO POR EL SISTEMA HMM: >> {genero.upper()} <<")
+
+    def guardar_en_bd(self):
+        sugerencia = f" [{self.genero_predicho_hmm}]" if self.genero_predicho_hmm else ""
+        genero_input = input(f"[>] Ingresa el género de la canción{sugerencia}: ").strip()
+        
+        if not genero_input and self.genero_predicho_hmm:
+            genero = self.genero_predicho_hmm
+        else:
+            genero = genero_input if genero_input else "Desconocido"
+
         db = GestorBaseDatos()
         nombre_cancion = os.path.basename(self.separador.ruta_salida)
         
@@ -195,15 +237,16 @@ class AplicacionCLI:
         otros = self.resultados_analisis["otros"]
         
         db.guardar_registro(
-            nombre_cancion, 
-            bat["bpm"], 
-            bat["total_golpes"], 
-            bat["cadena"],       
-            voz["cadena"],
-            bajo["cadena"],
-            otros["cadena"],
-            genero
+            nombre_pista=nombre_cancion, 
+            bpm=bat["bpm"], 
+            golpes=bat["total_golpes"], 
+            cadena_bateria=bat["cadena"],
+            cadena_voz=voz["cadena"],
+            cadena_bajo=bajo["cadena"],
+            cadena_otros=otros["cadena"],
+            genero=genero
         )
+
 if __name__ == "__main__":
     app = AplicacionCLI()
     app.iniciar()
