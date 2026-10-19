@@ -21,19 +21,45 @@ class GestorBaseDatos:
             bpm REAL NOT NULL,
             total_golpes INTEGER NOT NULL,
             sintaxis_bateria TEXT NOT NULL,
+            sintaxis_voz TEXT NOT NULL,
+            sintaxis_bajo TEXT NOT NULL,
+            sintaxis_otros TEXT NOT NULL,
             genero TEXT NOT NULL,
             fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
         self._ejecutar_consulta(query)
+        self._actualizar_esquema_si_existe()
 
-    def guardar_registro(self, nombre_pista, bpm, golpes, cadena_bateria, genero):
+    def _actualizar_esquema_si_existe(self):
+        columnas_nuevas = [
+            ("sintaxis_voz", "TEXT DEFAULT ''"),
+            ("sintaxis_bajo", "TEXT DEFAULT ''"),
+            ("sintaxis_otros", "TEXT DEFAULT ''")
+        ]
+        with sqlite3.connect(self.ruta_db) as conexion:
+            cursor = conexion.cursor()
+            cursor.execute("PRAGMA table_info(pistas_entrenamiento)")
+            columnas_existentes = [col[1] for col in cursor.fetchall()]
+            
+            for col_nombre, col_tipo in columnas_nuevas:
+                if col_nombre not in columnas_existentes:
+                    cursor.execute(f"ALTER TABLE pistas_entrenamiento ADD COLUMN {col_nombre} {col_tipo}")
+            conexion.commit()
+
+    def guardar_registro(self, nombre_pista, bpm, golpes, cadena_bateria, cadena_voz, cadena_bajo, cadena_otros, genero):
         query = """
-        INSERT INTO pistas_entrenamiento (nombre_archivo, bpm, total_golpes, sintaxis_bateria, genero)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO pistas_entrenamiento (
+            nombre_archivo, bpm, total_golpes, 
+            sintaxis_bateria, sintaxis_voz, sintaxis_bajo, sintaxis_otros, genero
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """
-        self._ejecutar_consulta(query, (nombre_pista, bpm, golpes, cadena_bateria, genero))
-        print(f"[+] [Base de Datos] Registro SQL exitoso para: {nombre_pista} ({genero})")
+        self._ejecutar_consulta(
+            query, 
+            (nombre_pista, bpm, golpes, cadena_bateria, cadena_voz, cadena_bajo, cadena_otros, genero)
+        )
+        print(f"[+] [Base de Datos] Registro exitoso de los 4 stems para: {nombre_pista} ({genero})")
 
     def borrar_ultimo_registro(self):
         query_check = "SELECT id, nombre_archivo FROM pistas_entrenamiento ORDER BY id DESC LIMIT 1"

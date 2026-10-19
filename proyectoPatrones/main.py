@@ -190,14 +190,20 @@ class AplicacionCLI:
         nombre_cancion = os.path.basename(self.separador.ruta_salida)
         
         bat = self.resultados_analisis["bateria"]
+        voz = self.resultados_analisis["voz"]
+        bajo = self.resultados_analisis["bajo"]
+        otros = self.resultados_analisis["otros"]
+        
         db.guardar_registro(
             nombre_cancion, 
             bat["bpm"], 
             bat["total_golpes"], 
-            bat["cadena"], 
+            bat["cadena"],       
+            voz["cadena"],
+            bajo["cadena"],
+            otros["cadena"],
             genero
         )
-
 if __name__ == "__main__":
     app = AplicacionCLI()
     app.iniciar()
