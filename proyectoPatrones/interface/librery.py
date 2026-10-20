@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from modulos.database import GestorBaseDatos
 
+# -*- coding: utf-8 -*-
 class Librery (QWidget):
 
 	def __init__ (self):
@@ -22,7 +23,7 @@ class Librery (QWidget):
 		layout_principal.setContentsMargins(20,20,20,20)
 		layout_principal.setSpacing(15)
 		
-		titulo = QLabel("Libreria")
+		titulo = QLabel("Librería")
 		titulo.setStyleSheet(" font-size: 20px; font-weight: bold; color: #ffffff;")
 		layout_principal.addWidget(titulo)
 
@@ -37,7 +38,7 @@ class Librery (QWidget):
 		layout_busqueda = QHBoxLayout()
 		
 		self.input_buscar = QLineEdit()
-		self.input_buscar.setPlaceholderText("Buscar canciones, artistas o generos!")
+		self.input_buscar.setPlaceholderText("Buscar canciones, artistas o géneros...")
 		self.input_buscar.textChanged.connect(self.filtrar_tabla)
 		self.input_buscar.setStyleSheet("""
 			QLineEdit {
@@ -79,7 +80,7 @@ class Librery (QWidget):
 		self.tabla = QTableWidget()
 		self.tabla.setColumnCount(6)
 		self.tabla.setHorizontalHeaderLabels([
-			"No.","Nombre","BPM","Golpes","Sintaxis Bateria","Genero"
+			"No.", "Nombre", "BPM", "Golpes", "Sintaxis Batería", "Género"
 		])
 
 		self.tabla.setStyleSheet("""
@@ -153,7 +154,7 @@ class Librery (QWidget):
 					item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
 					self.tabla.setItem(fila_idx,col_idx, item)
 		except Exception as e:
-			print (f"Error al caragar datos: {e}")
+			print (f"Error al cargar datos: {e}")
 
 	def filtrar_tabla (self,texto):
 		self.cargar_datos_tabla(filtro = texto)
