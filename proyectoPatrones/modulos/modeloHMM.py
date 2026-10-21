@@ -29,7 +29,6 @@ class ClasificadorEstructuraHMM:
 
         for r in registros_bd:
             cadena_bat, cadena_voz, cadena_bajo, cadena_otros, genero = r
-            # Combinar los 4 stems en una secuencia multicanal unificada por ventana
             cadena_unificada = f"{cadena_bat}-{cadena_voz}-{cadena_bajo}-{cadena_otros}"
             
             if genero not in datos_por_genero:
@@ -58,7 +57,6 @@ class ClasificadorEstructuraHMM:
             print(f"[+] [HMM] Modelo entrenado con éxito para el género: '{genero}' ({len(secuencias)} pistas)")
 
     def predecir_genero(self, cadena_bat, cadena_voz, cadena_bajo, cadena_otros):
-        """Calcula la verosimilitud (log-likelihood) de la canción contra cada HMM y retorna el género ganador."""
         if not self.modelos_por_genero:
             return "Sin modelos entrenados", {}
 

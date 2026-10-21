@@ -14,13 +14,15 @@ class AplicacionCLI:
         self.stems = None
         self.resultados_analisis = None
         self.genero_predicho_hmm = None
+        self.nombre_pista = None
 
     def iniciar(self):
         print("="*60)
         print("   SISTEMA DE RECONOCIMIENTO DE PATRONES MUSICALES (POO)")
         print("="*60)
         
-        cancion = input("[>] Ingresa la ruta de tu pista .mp3: ")
+        cancion = input("Ingresa la ruta de tu pista .mp3: ")
+        self.nombre_pista_actual = os.path.basename(cancion)
         
         try:
             self.stems = self.separador.procesar_pista(cancion)
@@ -29,8 +31,7 @@ class AplicacionCLI:
             return
 
         if self.stems:
-           self.menu_inicial()
-
+            self.menu_inicial()
     def menu_inicial(self):
         while True:
             print("\n" + "="*50)
@@ -229,7 +230,11 @@ class AplicacionCLI:
             genero = genero_input if genero_input else "Desconocido"
 
         db = GestorBaseDatos()
-        nombre_cancion = os.path.basename(self.separador.ruta_salida)
+        
+        if self.nombre_pista_actual:
+            nombre_cancion = os.path.splitext(self.nombre_pista_actual)[0]
+        else:
+            nombre_cancion = "Pista_Desconocida"
         
         bat = self.resultados_analisis["bateria"]
         voz = self.resultados_analisis["voz"]

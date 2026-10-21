@@ -1,34 +1,40 @@
-import subprocess
 import os
-import sys
+import subprocess
 
 class MotorSeparacion:
-    def __init__(self, modelo="htdemucs"):
-        self.modelo = modelo
-        self.ruta_salida = "separated"
+    def __init__(self, carpeta_base_salida="pistas_separadas"):
+        self.carpeta_base_salida = carpeta_base_salida
+        self.ruta_salida = None
 
-    def procesar_pista(self, ruta_mp3):
-        if not os.path.exists(ruta_mp3):
-            raise FileNotFoundError(f"El archivo '{ruta_mp3}' no existe. Asegúrate de incluir la extensión o la ruta correcta.")
+    def procesar_pista(self, ruta_cancion):
+        if not os.path.exists(ruta_cancion):
+            raise FileNotFoundError(f"No se encontró el archivo de audio: {ruta_cancion}")
 
-        print(f"[*] [Motor IA] Iniciando separación con modelo {self.modelo}...")
-        comando = [sys.executable, "-m", "demucs", "-n", self.modelo, ruta_mp3]
+        nombre_cancion = os.path.splitext(os.path.basename(ruta_cancion))[0]
         
-        try:
-            subprocess.run(comando, check=True)
-            print("[+] [Motor IA] Separación completada.")
-            return self._generar_rutas(ruta_mp3)
-        except subprocess.CalledProcessError as e:
-            print(f"[-] [Motor IA] Error crítico en la ejecución: {e}")
-            return None
+        directorio_destino = os.path.join(self.carpeta_base_salida, nombre_cancion)
+        os.makedirs(directorio_destino, exist_ok=True)
 
-    def _generar_rutas(self, ruta_mp3):
-        nombre_base = os.path.splitext(os.path.basename(ruta_mp3))[0]
-        ruta_base = os.path.join(self.ruta_salida, self.modelo, nombre_base)
+        print(f"Separando stems para '{nombre_cancion}' en: {directorio_destino}...")
+
+        comando = [
+            "demucs",
+            "-n", "htdemucs",
+            "-o", directorio_destino,
+            "--filename", "{stem}.{ext}",  
+            ruta_cancion
+        ]
+
+        subprocess.run(comando, check=True)
+        carpeta_stems_generados = os.path.join(directorio_destino, "htdemucs", nombre_cancion)
+        self.ruta_salida = directorio_destino
         
-        return {
-            "bateria": os.path.join(ruta_base, "drums.wav"),
-            "bajo": os.path.join(ruta_base, "bass.wav"),
-            "voz": os.path.join(ruta_base, "vocals.wav"),
-            "otros": os.path.join(ruta_base, "other.wav")
+        stems = {
+            "bateria": os.path.join(directorio_destino, "drums.wav") if os.path.exists(os.path.join(directorio_destino, "drums.wav")) else os.path.join(carpeta_stems_generados, "drums.wav"),
+            "voz": os.path.join(directorio_destino, "vocals.wav") if os.path.exists(os.path.join(directorio_destino, "vocals.wav")) else os.path.join(carpeta_stems_generados, "vocals.wav"),
+            "bajo": os.path.join(directorio_destino, "bass.wav") if os.path.exists(os.path.join(directorio_destino, "bass.wav")) else os.path.join(carpeta_stems_generados, "bass.wav"),
+            "otros": os.path.join(directorio_destino, "other.wav") if os.path.exists(os.path.join(directorio_destino, "other.wav")) else os.path.join(carpeta_stems_generados, "other.wav")
         }
+
+        print(f"[+] [Motor IA] Separación completada exitosamente.")
+        return stems
