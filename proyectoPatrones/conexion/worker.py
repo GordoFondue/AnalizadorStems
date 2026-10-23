@@ -22,12 +22,22 @@ class WorkerProcesamiento(QThread):
 
 	def run(self):
 		try:
-			separador = MotorSeparacion(modelo="htdemucs")
+			separador = MotorSeparacion()
 			rutas_stems = separador.procesar_pista(self.ruta_archivo)
 
 			if not rutas_stems:
 				self.error.emit("El motor de separación no pudo generar los stems.")
 				return
+
+			nombre_cancion = os.path.splitext (os.path.basename(self.ruta_archivo))[0]
+			directorio_real = os.path.join("pistas_separadas",nombre_cancion,"htdemucs")
+
+			rutas_stems = {
+				"bateria":os.path.join(directorio_real,"drums.wav"),
+				"voz":os.path.join(directorio_real,"vocals.wav"),
+				"bajo":os.path.join(directorio_real,"bass.wav"),
+				"otros":os.path.join(directorio_real,"other.wav")
+			}
 
 			analizador_bat = AnalizadorPercusion(rutas_stems["bateria"])
 			bpm, tiempos = analizador_bat.extraer_bpm_y_golpes()
