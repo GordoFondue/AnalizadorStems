@@ -9,7 +9,6 @@ from PyQt6.QtCore import Qt
 from modulos.database import GestorBaseDatos
 from conexion.worker import WorkerProcesamiento
 
-# -*- coding: utf-8 -*-
 class Librery (QWidget):
 
 	def __init__ (self):
