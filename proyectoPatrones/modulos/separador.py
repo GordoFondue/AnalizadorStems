@@ -15,25 +15,30 @@ class MotorSeparacion:
         directorio_destino = os.path.join(self.carpeta_base_salida, nombre_cancion)
         os.makedirs(directorio_destino, exist_ok=True)
 
-        print(f"Separando stems para '{nombre_cancion}' en: {directorio_destino}...")
+        print(f"[*] [Motor IA] Separando stems para '{nombre_cancion}'...")
 
         comando = [
             "demucs",
             "-n", "htdemucs",
             "-o", directorio_destino,
-            "--filename", "{stem}.{ext}",  
             ruta_cancion
         ]
 
         subprocess.run(comando, check=True)
-        carpeta_stems_generados = os.path.join(directorio_destino, "htdemucs", nombre_cancion)
+
         self.ruta_salida = directorio_destino
-        
+
+        def encontrar_stem(nombre_stem):
+            for raiz, _, archivos in os.walk(directorio_destino):
+                if f"{nombre_stem}.wav" in archivos:
+                    return os.path.join(raiz, f"{nombre_stem}.wav")
+            raise FileNotFoundError(f"No se encontró el archivo {nombre_stem}.wav en {directorio_destino}")
+
         stems = {
-            "bateria": os.path.join(directorio_destino, "drums.wav") if os.path.exists(os.path.join(directorio_destino, "drums.wav")) else os.path.join(carpeta_stems_generados, "drums.wav"),
-            "voz": os.path.join(directorio_destino, "vocals.wav") if os.path.exists(os.path.join(directorio_destino, "vocals.wav")) else os.path.join(carpeta_stems_generados, "vocals.wav"),
-            "bajo": os.path.join(directorio_destino, "bass.wav") if os.path.exists(os.path.join(directorio_destino, "bass.wav")) else os.path.join(carpeta_stems_generados, "bass.wav"),
-            "otros": os.path.join(directorio_destino, "other.wav") if os.path.exists(os.path.join(directorio_destino, "other.wav")) else os.path.join(carpeta_stems_generados, "other.wav")
+            "bateria": encontrar_stem("drums"),
+            "voz": encontrar_stem("vocals"),
+            "bajo": encontrar_stem("bass"),
+            "otros": encontrar_stem("other")
         }
 
         print(f"[+] [Motor IA] Separación completada exitosamente.")

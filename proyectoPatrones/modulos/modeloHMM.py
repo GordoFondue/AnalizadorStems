@@ -13,7 +13,6 @@ class ClasificadorEstructuraHMM:
         self.modelos_por_genero = {}
 
     def _cadena_a_vector(self, cadena_simbolica):
-        """Convierte una cadena tipo 'A-B-C' a una matriz numérica 2D para hmmlearn."""
         simbolos = cadena_simbolica.split('-')
         indices = [self.mapeo_simbolos[s] for s in simbolos if s in self.mapeo_simbolos]
         if not indices:
@@ -21,10 +20,6 @@ class ClasificadorEstructuraHMM:
         return np.array(indices).reshape(-1, 1)
 
     def entrenar_modelos(self, registros_bd):
-        """
-        Entrena un HMM por género utilizando los registros recuperados de SQLite.
-        registros_bd: lista de tuplas (sintaxis_bateria, sintaxis_voz, sintaxis_bajo, sintaxis_otros, genero)
-        """
         datos_por_genero = {}
 
         for r in registros_bd:
@@ -54,7 +49,7 @@ class ClasificadorEstructuraHMM:
             )
             modelo.fit(X, lengths)
             self.modelos_por_genero[genero] = modelo
-            print(f"[+] [HMM] Modelo entrenado con éxito para el género: '{genero}' ({len(secuencias)} pistas)")
+            print(f"Modelo entrenado con éxito: '{genero}' ({len(secuencias)} pistas)")
 
     def predecir_genero(self, cadena_bat, cadena_voz, cadena_bajo, cadena_otros):
         if not self.modelos_por_genero:
