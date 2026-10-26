@@ -16,7 +16,7 @@ class PreprocesadorSimbolico:
             
         matriz = np.array(secuencia_datos)
         
-        self.modelo_ia.fit(matriz)
+        self.modelo.fit(matriz)
         etiquetas_numericas = self.modelo.predict(matriz)
         
         secuencia_letras = [self.alfabeto[etiqueta] for etiqueta in etiquetas_numericas]
@@ -40,13 +40,12 @@ class PreprocesadorSimbolico:
         
         centroides = self.modelo.means_
         
-        print("\nSIGNIFICADO MATEMÁTICO DE LOS SÍMBOLOS (MEDIAS GAUSSIANAS) ---")
         for i in range(self.numero_estados):
             bpm_centro = centroides[i, 0]
             golpes_centro = centroides[i, 1]
             print(f"Símbolo {self.alfabeto[i]} -> Media: {bpm_centro:.1f} BPM, {golpes_centro:.2f} golpes/segundo")
             
-        plt.figure(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(10, 6))
         colores = ['blue', 'green', 'red', 'purple', 'orange']
         
         for i in range(self.numero_estados):

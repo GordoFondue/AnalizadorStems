@@ -26,15 +26,15 @@ class AnalizadorPercusion:
         return bpm, tiempos
 
     def graficar_validacion(self, tiempos):
-        print("Generando gráfica de validación...")
-        plt.figure(figsize=(14, 5))
-        librosa.display.waveshow(self.y, sr=self.sr, alpha=0.5, label='Onda de Batería')
-        plt.vlines(tiempos, ymin=-1, ymax=1, color='r', alpha=0.8, linestyle='--', label='Golpes Detectados')
-        plt.title("Verificación del Reconocimiento de Patrones (Percusión)")
-        plt.xlabel("Tiempo (segundos)")
-        plt.ylabel("Amplitud de Energía")
-        plt.legend()
-        plt.show()
+        fig, ax = plt.subplots(figsize=(10, 4))
+        librosa.display.waveshow(self.y, sr=self.sr, alpha=0.5, label="bateria", ax=ax)
+        ax.vlines(tiempos, ymin=-1, ymax=1, color='r', alpha=0.8, linestyle='--', label='golpes')
+        ax.set_title("Verificación del reconocimiento")
+        ax.set_xlabel("tiempo")
+        ax.set_ylabel("Energía")
+        ax.legend()
+        fig.tight_layout()
+        return fig
 
     def secuencia_temporal(self, ventana_segundos=10):
         print(f"\nSegmentando audio en ventanas de {ventana_segundos}s...")
