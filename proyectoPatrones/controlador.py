@@ -21,40 +21,40 @@ class ControladorAnalisis:
         rutas_stems = self.separador.procesar_pista(ruta_mp3)
 
         analizador_perc = AnalizadorPercusion(rutas_stems["bateria"])
-        bpm, tiempos = analizador_perc.extraer_bpm_y_golpes()
-        sec_bateria = analizador_perc.extraer_secuencia_temporal(ventana_segundos=10)
+        bpm, tiempos = analizador_perc.bpmYgolpes()
+        sec_bateria = analizador_perc.secuencia_temporal(ventana_segundos=10)
         
         sim_bat = "A"
         if sec_bateria:
             traductor_bat = PreprocesadorSimbolico(numero_estados=3)
-            sim_bat = traductor_bat.transformar_a_simbolos(sec_bateria) or "A"
+            sim_bat = traductor_bat.transformar(sec_bateria) or "A"
 
         analizador_v = AnalizadorVoz(rutas_stems["voz"])
-        sec_voz = analizador_v.extraer_secuencia_temporal(ventana_segundos=10)
+        sec_voz = analizador_v.secuencia_temporal(ventana_segundos=10)
         
         sim_voz = "A"
         if sec_voz:
             traductor_voz = PreprocesadorSimbolico(numero_estados=3)
             traductor_voz.alfabeto = ['X', 'Y', 'Z']
-            sim_voz = traductor_voz.transformar_a_simbolos(sec_voz) or "A"
+            sim_voz = traductor_voz.transformar(sec_voz) or "A"
 
         analizador_b = AnalizadorBajo(rutas_stems["bajo"])
-        sec_bajo = analizador_b.extraer_secuencia_temporal(ventana_segundos=10)
+        sec_bajo = analizador_b.secuencia_temporal(ventana_segundos=10)
         
         sim_bajo = "A"
         if sec_bajo:
             traductor_bajo = PreprocesadorSimbolico(numero_estados=3)
             traductor_bajo.alfabeto = ['B1', 'B2', 'B3']
-            sim_bajo = traductor_bajo.transformar_a_simbolos(sec_bajo) or "A"
+            sim_bajo = traductor_bajo.transformar(sec_bajo) or "A"
 
         analizador_o = AnalizadorOtros(rutas_stems["otros"])
-        sec_otros = analizador_o.extraer_secuencia_temporal(ventana_segundos=10)
+        sec_otros = analizador_o.secuencia_temporal(ventana_segundos=10)
         
         sim_otros = "A"
         if sec_otros:
             traductor_otros = PreprocesadorSimbolico(numero_estados=3)
             traductor_otros.alfabeto = ['O1', 'O2', 'O3']
-            sim_otros = traductor_otros.transformar_a_simbolos(sec_otros) or "A"
+            sim_otros = traductor_otros.transformar(sec_otros) or "A"
 
         registros = self.db.entrenamiento()
         genero_predicho = "Entrenamiento"

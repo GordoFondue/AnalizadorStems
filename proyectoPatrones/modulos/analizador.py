@@ -14,7 +14,7 @@ class AnalizadorPercusion:
         print("Cargando audio...")
         self.y, self.sr = librosa.load(self.ruta_audio)
 
-    def extraer_bpm_y_golpes(self):
+    def bpmYgolpes(self):
         print("detectando transitorios...")
         fuerza_golpes = librosa.onset.onset_strength(y=self.y, sr=self.sr)
         golpes_frames = librosa.onset.onset_detect(onset_envelope=fuerza_golpes, sr=self.sr, delta=0.2, wait=10)
@@ -26,7 +26,7 @@ class AnalizadorPercusion:
         return bpm, tiempos
 
     def graficar_validacion(self, tiempos):
-        print("[*] [Analizador] Generando gráfica de validación visual...")
+        print("Generando gráfica de validación...")
         plt.figure(figsize=(14, 5))
         librosa.display.waveshow(self.y, sr=self.sr, alpha=0.5, label='Onda de Batería')
         plt.vlines(tiempos, ymin=-1, ymax=1, color='r', alpha=0.8, linestyle='--', label='Golpes Detectados')
@@ -36,8 +36,8 @@ class AnalizadorPercusion:
         plt.legend()
         plt.show()
 
-    def extraer_secuencia_temporal(self, ventana_segundos=10):
-        print(f"\n[*] [Analizador] Segmentando audio en ventanas de {ventana_segundos}s...")
+    def secuencia_temporal(self, ventana_segundos=10):
+        print(f"\nSegmentando audio en ventanas de {ventana_segundos}s...")
         muestras_por_ventana = ventana_segundos * self.sr
         total_ventanas = len(self.y) // muestras_por_ventana
         
@@ -56,5 +56,4 @@ class AnalizadorPercusion:
             
             secuencia_datos.append([bpm_segmento, tasa_golpes])
             
-        print(f"[+] Se generaron {len(secuencia_datos)} vectores temporales.")
         return secuencia_datos

@@ -15,7 +15,7 @@ class MotorSeparacion:
         directorio_destino = os.path.join(self.carpeta_base_salida, nombre_cancion)
         os.makedirs(directorio_destino, exist_ok=True)
 
-        print(f"[*] [Motor IA] Separando stems para '{nombre_cancion}'...")
+        print(f"Separando stems para '{nombre_cancion}'...")
 
         comando = [
             "demucs",
@@ -41,5 +41,5 @@ class MotorSeparacion:
             "otros": encontrar_stem("other")
         }
 
-        print(f"[+] [Motor IA] Separación completada exitosamente.")
+        print(f"Separación completada exitosamente.")
         return stems

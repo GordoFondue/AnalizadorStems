@@ -6,13 +6,13 @@ class AnalizadorBajo:
         self.ruta_audio = ruta_audio
         self.y = None
         self.sr = None
-        self._cargar_audio()
+        self.cargar_audio()
 
-    def _cargar_audio(self):
+    def cargar_audio(self):
         print("Analizando bajo...")
         self.y, self.sr = librosa.load(self.ruta_audio)
 
-    def extraer_secuencia_temporal(self, ventana_segundos=10):
+    def secuencia_temporal(self, ventana_segundos=10):
         print(f"\nSegmentando audio en ventanas de {ventana_segundos}s...")
         muestras_por_ventana = ventana_segundos * self.sr
         total_ventanas = len(self.y) // muestras_por_ventana
@@ -42,5 +42,4 @@ class AnalizadorBajo:
                 
             secuencia_datos.append([frecuencia_media, energia])
             
-        print(f"[+] Se generaron {len(secuencia_datos)} vectores de bajo.")
         return secuencia_datos

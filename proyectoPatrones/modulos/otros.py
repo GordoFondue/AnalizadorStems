@@ -6,13 +6,13 @@ class AnalizadorOtros:
         self.ruta_audio = ruta_audio
         self.y = None
         self.sr = None
-        self._cargar_audio()
+        self.cargar_audio()
 
-    def _cargar_audio(self):
+    def cargar_audio(self):
         print("Cargando pista instrumental armónica...")
         self.y, self.sr = librosa.load(self.ruta_audio)
 
-    def extraer_secuencia_temporal(self, ventana_segundos=10):
+    def secuencia_temporal(self, ventana_segundos=10):
         print(f"\n Segmentando audio en ventanas de {ventana_segundos}s...")
         muestras_por_ventana = ventana_segundos * self.sr
         total_ventanas = len(self.y) // muestras_por_ventana
@@ -36,5 +36,4 @@ class AnalizadorOtros:
                 
             secuencia_datos.append([mfcc_1, brillo_medio])
             
-        print(f"[+] Se generaron {len(secuencia_datos)} vectores de instrumentos varios.")
         return secuencia_datos

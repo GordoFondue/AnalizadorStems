@@ -12,7 +12,7 @@ class ClasificadorEstructuraHMM:
         }
         self.modelos_por_genero = {}
 
-    def _cadena_a_vector(self, cadena_simbolica):
+    def cadena_vec(self, cadena_simbolica):
         simbolos = cadena_simbolica.split('-')
         indices = [self.mapeo_simbolos[s] for s in simbolos if s in self.mapeo_simbolos]
         if not indices:
@@ -29,7 +29,7 @@ class ClasificadorEstructuraHMM:
             if genero not in datos_por_genero:
                 datos_por_genero[genero] = []
             
-            vec = self._cadena_a_vector(cadena_unificada)
+            vec = self.cadena_vec(cadena_unificada)
             if vec is not None:
                 datos_por_genero[genero].append(vec)
 
@@ -56,7 +56,7 @@ class ClasificadorEstructuraHMM:
             return "Sin modelos entrenados", {}
 
         cadena_unificada = f"{cadena_bat}-{cadena_voz}-{cadena_bajo}-{cadena_otros}"
-        X = self._cadena_a_vector(cadena_unificada)
+        X = self.cadena_vec(cadena_unificada)
 
         if X is None:
             return "Cadena inválida", {}
