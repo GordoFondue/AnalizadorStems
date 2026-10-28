@@ -2,10 +2,10 @@ import os
 import sqlite3
 from PyQt6.QtWidgets import (
 	QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, 
-	QMessageBox, QHeaderView, QFileDialog
+	QMessageBox, QHeaderView, QFileDialog,QProgressBar
 )
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from modulos.database import GestorBaseDatos
 from conexion.worker import WorkerProcesamiento
 
@@ -96,10 +96,34 @@ class Librery (QWidget):
 		
 		layout_principal.addLayout(layout_acciones)
 
+		self.barra_progreso = QProgressBar()
+		
+		self.barra_progreso.setRange(0,100)
+		self.barra_progreso.setValue(0)
+		self.barra_progreso.setVisible(False)
+		self.barra_progreso.setStyleSheet("""
+			QProgressBar{
+				background-color: #2b2b2b;
+				border: 1px solid #3d3d3d;
+				border-radius: 4px;
+				height: 8px;
+				text-align: center;
+			}
+			QProgressBar::chunk {
+				background-color: #1db954;
+				border-radius: 4px;
+			}
+		""")
+
+		layout_principal.addWidget(self.barra_progreso)
+
+		self.timer_progreso = QTimer(self)
+		self.timer_progreso.timeout.connect(self.actualizar_progreso_visual)
+
 		self.tabla = QTableWidget()
-		self.tabla.setColumnCount(6)
+		self.tabla.setColumnCount(4)
 		self.tabla.setHorizontalHeaderLabels([
-			"No.", "Nombre", "BPM", "Golpes", "Sintaxis Batería", "Género"
+			"No.", "Nombre", "BPM", "Género"
 		])
 
 		self.tabla.setStyleSheet("""
@@ -133,11 +157,8 @@ class Librery (QWidget):
 		self.tabla.setColumnWidth(0,50)
 		header.setSectionResizeMode(1,QHeaderView.ResizeMode.Stretch)
 		header.setSectionResizeMode(2,QHeaderView.ResizeMode.Fixed)
-		self.tabla.setColumnWidth(2,70)
-		header.setSectionResizeMode(3,QHeaderView.ResizeMode.Fixed)
-		self.tabla.setColumnWidth(3,70)
-		header.setSectionResizeMode(4,QHeaderView.ResizeMode.ResizeToContents)
-		header.setSectionResizeMode(5,QHeaderView.ResizeMode.ResizeToContents)
+		self.tabla.setColumnWidth(2,80)
+		header.setSectionResizeMode(3,QHeaderView.ResizeMode.ResizeToContents)
 
 		self.tabla.verticalHeader().setVisible(False)
 		layout_principal.addWidget(self.tabla)
@@ -155,8 +176,11 @@ class Librery (QWidget):
 		if archivo_ruta:
 			self.btn_seleccionar.setEnabled(False)
 			self.btn_seleccionar.setText("Analizando...")
+			self.barra_progreso.setValue(0)
+			self.barra_progreso.setVisible(True)
 
 			self.worker = WorkerProcesamiento(archivo_ruta,self.db)
+			self.worker.progreso.connect(self.barra_progreso.setValue)
 			self.worker.terminado.connect(self.proceso_finalizado)
 			self.worker.error.connect(self.proceso_error)
 			self.worker.start()
@@ -182,7 +206,11 @@ class Librery (QWidget):
 			f"Ocurrió un error al procesar el audio:\n{mensaje_error}"
 		)
 
-		
+	def actualizar_progreso_visual(self):
+		valor_actual = self.barra_progreso.value()
+		if valor_actual < 95:
+			self.barra_progreso.setValue(valor_actual + 5)
+			
 	def cargar_datos_tabla (self,filtro=""):
 		try:
 			conexion = self.db.ruta_db
@@ -190,14 +218,14 @@ class Librery (QWidget):
 				cursor = conn.cursor()
 				if filtro:
 					query = """
-						SELECT id,nombre_archivo,bpm,total_golpes,sintaxis_bateria,genero
+						SELECT id,nombre_archivo,bpm,genero
 						FROM pistas_entrenamiento
 						WHERE nombre_archivo LIKE ? OR genero LIKE ?
 						"""
 					cursor.execute(query,(f"%{filtro}%",f"%{filtro}%"))
 				else: 
 					query = """
-						SELECT id,nombre_archivo, bpm, total_golpes, sintaxis_bateria,genero
+						SELECT id,nombre_archivo, bpm,genero
 						FROM pistas_entrenamiento
 						"""
 					cursor.execute(query)

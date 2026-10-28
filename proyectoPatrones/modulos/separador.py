@@ -1,12 +1,13 @@
 import os
 import subprocess
+import re
 
 class MotorSeparacion:
     def __init__(self, carpeta_base_salida="pistas_separadas"):
         self.carpeta_base_salida = carpeta_base_salida
         self.ruta_salida = None
 
-    def procesar_pista(self, ruta_cancion):
+    def procesar_pista(self, ruta_cancion, callback_progreso=None):
         if not os.path.exists(ruta_cancion):
             raise FileNotFoundError(f"No se encontró el archivo de audio: {ruta_cancion}")
 
@@ -24,8 +25,25 @@ class MotorSeparacion:
             ruta_cancion
         ]
 
-        subprocess.run(comando, check=True)
+        proceso = subprocess.Popen(
+        	comando,
+        	stdout=subprocess.PIPE,
+        	stderr=subprocess.STDOUT,
+        	universal_newlines=True
+        )
 
+        patron_procentaje = re.compile(r"(\d+)%")
+
+        for linea in proceso.stdout:
+        	print(linea, end="")
+        	match = patron_procentaje.search(linea)
+        	if match and callback_progreso:
+        		porcentaje = int(match.group(1))
+        		callback_progreso(porcentaje)
+        proceso.wait()
+        if proceso.returncode != 0:
+        	raise RuntimeError("El proceso de separacion con Demucs fallo")
+        
         self.ruta_salida = directorio_destino
 
         def encontrar_stem(nombre_stem):

@@ -14,11 +14,11 @@ class ControladorAnalisis:
         self.separador = MotorSeparacion(carpeta_base_salida=carpeta_salida)
         self.db = GestorBaseDatos(ruta_db=ruta_db)
 
-    def procesar_audio(self, ruta_mp3: str) -> dict:
+    def procesar_audio(self, ruta_mp3: str, callback_progreso = None) -> dict:
         if not os.path.exists(ruta_mp3):
             raise FileNotFoundError(f"El archivo de audio no existe: {ruta_mp3}")
 
-        rutas_stems = self.separador.procesar_pista(ruta_mp3)
+        rutas_stems = self.separador.procesar_pista(ruta_mp3, callback_progreso = callback_progreso)
 
         analizador_perc = AnalizadorPercusion(rutas_stems["bateria"])
         bpm, tiempos = analizador_perc.bpmYgolpes()
