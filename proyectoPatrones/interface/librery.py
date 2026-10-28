@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer
 from modulos.database import GestorBaseDatos
 from conexion.worker import WorkerProcesamiento
+from errores.dialogos import GestorDiagnostico
 
 class Librery (QWidget):
 
@@ -189,21 +190,23 @@ class Librery (QWidget):
 	def proceso_finalizado(self, nombre_pista):
 		self.btn_seleccionar.setEnabled(True)
 		self.btn_seleccionar.setText("Seleccionar archivos")
+		self.barra_progreso.setVisible(False)
 		self.cargar_datos_tabla()
-		QMessageBox.information(
+
+		GestorDiagnostico.mostrar_exito(
 			self,
-			"Análisis Exitoso",
-			f"La pista '{nombre_pista}' fue procesada y guardada correctamente."
+			"Analisis Exitosa",
+			f"La pista {nombre_pista} fue procesada y guardada correctamente"
 		)
 
 	def proceso_error(self,mensaje_error):
 		self.btn_seleccionar.setEnabled(True)
 		self.btn_seleccionar.setText("Seleccionar archivos")
 		self.cargar_datos_tabla()
-		QMessageBox.information(
+		GestorDiagnostico.mostrar_error(
 			self,
-			"Error en el Análisis",
-			f"Ocurrió un error al procesar el audio:\n{mensaje_error}"
+			"Fallo en Procesamiento de Audio",
+			f"Ocurrio un error al procesar el archivo: \n {mensaje_error}"
 		)
 
 	def actualizar_progreso_visual(self):
