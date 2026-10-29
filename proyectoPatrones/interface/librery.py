@@ -8,7 +8,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer
 from modulos.database import GestorBaseDatos
 from conexion.worker import WorkerProcesamiento
-from errores.dialogos import GestorDiagnostico
+from ventanas.dialogos import GestorDiagnostico
+from acciones.click import GestorMenuContextual
 
 class Librery (QWidget):
 
@@ -122,6 +123,8 @@ class Librery (QWidget):
 		self.timer_progreso.timeout.connect(self.actualizar_progreso_visual)
 
 		self.tabla = QTableWidget()
+		self.tabla.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+		self.tabla.customContextMenuRequested.connect(self.mostrar_menu_contextual)
 		self.tabla.setColumnCount(4)
 		self.tabla.setHorizontalHeaderLabels([
 			"No.", "Nombre", "BPM", "Género"
@@ -152,6 +155,7 @@ class Librery (QWidget):
 				color: #ffffff;
 			}
 		""")
+		
 
 		header = self.tabla.horizontalHeader()
 		header.setSectionResizeMode(0,QHeaderView.ResizeMode.Fixed)
@@ -246,3 +250,26 @@ class Librery (QWidget):
 
 	def filtrar_tabla (self,texto):
 		self.cargar_datos_tabla(filtro = texto)
+
+	def mostrar_menu_contextual(self,posicion):
+		punto = self.tabla.mapToGlobal(posicion)
+		fila_seleccionada = self.tabla.currentRow()
+
+		if fila_seleccionada >= 0:
+			item_pista = self.tabla.item(fila_seleccionada, 1)
+			if item_pista:
+				nombre_pista = item_pista.text()
+
+				menu = GestorMenuContextual.crear_menu_libreria(
+					self,
+					nombre_pista,
+					callback_ver_separacion = self.ir_a_pestana_separacion
+				)
+				menu.exec(punto)
+
+
+	def ir_a_pestana_separacion(self, nombre_pista):
+		ventana_principal = self.window()
+		if hasattr(ventana_principal,"tabs"):
+			ventana_principal.tabs.setCurrentIndex(1)
+			ventana_principal.pestana_separacion.cargar_pista_seleccionada(nombre_pista)

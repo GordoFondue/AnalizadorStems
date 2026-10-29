@@ -1,6 +1,9 @@
 import sys
 from PyQt6.QtWidgets import QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QTabWidget
+
 from interface.librery import Librery
+from interface.separacion import Separacion
+
 
 # -*- coding: utf-8 -*-
 class WindowMain (QMainWindow):
@@ -49,3 +52,8 @@ class WindowMain (QMainWindow):
 
 		self.pestana_db = Librery()
 		self.tabs.addTab(self.pestana_db, "Librería")
+
+		self.pestana_separacion = Separacion()
+		self.tabs.addTab(self.pestana_separacion, "Separación")
+
+		
