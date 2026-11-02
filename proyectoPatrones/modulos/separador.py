@@ -1,5 +1,8 @@
 import os
 import subprocess
+import librosa
+import soundfile as sf
+import numpy as np
 import re
 
 class MotorSeparacion:
@@ -7,10 +10,31 @@ class MotorSeparacion:
         self.carpeta_base_salida = carpeta_base_salida
         self.ruta_salida = None
 
+
+    def volumen_audio(self, ruta_entrada, ruta_salida="separated/temp_normalizado.wav", target_rms_db=-20.0):
+
+        y, sr = librosa.load(ruta_entrada, sr=None)
+        rms = np.sqrt(np.mean(y**2))
+        if rms == 0:
+            return ruta_entrada
+
+        target_rms = 10**(target_rms_db/ 20.0)
+        escala = target_rms / rms
+        Y_norma = y * escala
+
+        pico_max = np.max(np.abs(Y_norma))
+        if pico_max > 1.0:
+            Y_norma = Y_norma / pico_max
+
+        os.makedirs(os.path.dirname(ruta_salida), exist_ok=True)
+        sf.write(ruta_salida, Y_norma.T if Y_norma.ndim > 1 else Y_norma, sr)
+        return ruta_salida
+
     def procesar_pista(self, ruta_cancion, callback_progreso=None):
         if not os.path.exists(ruta_cancion):
             raise FileNotFoundError(f"No se encontró el archivo de audio: {ruta_cancion}")
 
+        ruta_procesada = self.volumen_audio(ruta_cancion)
         nombre_cancion = os.path.splitext(os.path.basename(ruta_cancion))[0]
         
         directorio_destino = os.path.join(self.carpeta_base_salida, nombre_cancion)
@@ -35,17 +59,18 @@ class MotorSeparacion:
         patron_procentaje = re.compile(r"(\d+)%")
 
         for linea in proceso.stdout:
-        	print(linea, end="")
-        	match = patron_procentaje.search(linea)
-        	if match and callback_progreso:
-        		porcentaje = int(match.group(1))
-        		callback_progreso(porcentaje)
+            print(linea, end="")
+            match = patron_procentaje.search(linea)
+            if match and callback_progreso:
+                porcentaje = int(match.group(1))
+                callback_progreso(porcentaje)
+
         proceso.wait()
         if proceso.returncode != 0:
-        	raise RuntimeError("El proceso de separacion con Demucs fallo")
+            raise RuntimeError("El proceso de separacion con Demucs fallo")
         
         self.ruta_salida = directorio_destino
-
+        
         def encontrar_stem(nombre_stem):
             for raiz, _, archivos in os.walk(directorio_destino):
                 if f"{nombre_stem}.wav" in archivos:
