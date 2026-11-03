@@ -13,7 +13,13 @@ class MotorSeparacion:
 
     def volumen_audio(self, ruta_entrada, ruta_salida="separated/temp_normalizado.wav", target_rms_db=-20.0):
 
-        y, sr = librosa.load(ruta_entrada, sr=None)
+        try:
+            y, sr = librosa.load(ruta_entrada, sr=None)
+        except Exception as e:
+            raise ValueError(f"El archivo no se pudo leer. Delate: {str(e)}")
+        if y is None or len(y) == 0:
+            raise ValueError("El archivo no contiene datos legibles")
+        
         rms = np.sqrt(np.mean(y**2))
         if rms == 0:
             return ruta_entrada

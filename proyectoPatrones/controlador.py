@@ -18,55 +18,57 @@ class ControladorAnalisis:
         if not os.path.exists(ruta_mp3):
             raise FileNotFoundError(f"El archivo de audio no existe: {ruta_mp3}")
 
-        rutas_stems = self.separador.procesar_pista(ruta_mp3, callback_progreso = callback_progreso)
+        try:
+            
+            rutas_stems = self.separador.procesar_pista(ruta_mp3, callback_progreso = callback_progreso)
 
-        analizador_perc = AnalizadorPercusion(rutas_stems["bateria"])
-        bpm, tiempos = analizador_perc.bpmYgolpes()
-        sec_bateria = analizador_perc.secuencia_temporal(ventana_segundos=10)
+            analizador_perc = AnalizadorPercusion(rutas_stems["bateria"])
+            bpm, tiempos = analizador_perc.bpmYgolpes()
+            sec_bateria = analizador_perc.secuencia_temporal(ventana_segundos=10)
         
-        sim_bat = "A"
-        if sec_bateria:
-            traductor_bat = PreprocesadorSimbolico(numero_estados=3)
-            sim_bat = traductor_bat.transformar(sec_bateria) or "A"
+            sim_bat = "A"
+            if sec_bateria:
+             traductor_bat = PreprocesadorSimbolico(numero_estados=3)
+             sim_bat = traductor_bat.transformar(sec_bateria) or "A"
 
-        analizador_v = AnalizadorVoz(rutas_stems["voz"])
-        sec_voz = analizador_v.secuencia_temporal(ventana_segundos=10)
+             analizador_v = AnalizadorVoz(rutas_stems["voz"])
+            sec_voz = analizador_v.secuencia_temporal(ventana_segundos=10)
         
-        sim_voz = "A"
-        if sec_voz:
-            traductor_voz = PreprocesadorSimbolico(numero_estados=3)
-            traductor_voz.alfabeto = ['X', 'Y', 'Z']
-            sim_voz = traductor_voz.transformar(sec_voz) or "A"
+            sim_voz = "A"
+            if sec_voz:
+             traductor_voz = PreprocesadorSimbolico(numero_estados=3)
+             traductor_voz.alfabeto = ['X', 'Y', 'Z']
+             sim_voz = traductor_voz.transformar(sec_voz) or "A"
 
-        analizador_b = AnalizadorBajo(rutas_stems["bajo"])
-        sec_bajo = analizador_b.secuencia_temporal(ventana_segundos=10)
+            analizador_b = AnalizadorBajo(rutas_stems["bajo"])
+            sec_bajo = analizador_b.secuencia_temporal(ventana_segundos=10)
         
-        sim_bajo = "A"
-        if sec_bajo:
-            traductor_bajo = PreprocesadorSimbolico(numero_estados=3)
-            traductor_bajo.alfabeto = ['B1', 'B2', 'B3']
-            sim_bajo = traductor_bajo.transformar(sec_bajo) or "A"
+            sim_bajo = "A"
+            if sec_bajo:
+             traductor_bajo = PreprocesadorSimbolico(numero_estados=3)
+             traductor_bajo.alfabeto = ['B1', 'B2', 'B3']
+             sim_bajo = traductor_bajo.transformar(sec_bajo) or "A"
 
-        analizador_o = AnalizadorOtros(rutas_stems["otros"])
-        sec_otros = analizador_o.secuencia_temporal(ventana_segundos=10)
+            analizador_o = AnalizadorOtros(rutas_stems["otros"])
+            sec_otros = analizador_o.secuencia_temporal(ventana_segundos=10)
         
-        sim_otros = "A"
-        if sec_otros:
-            traductor_otros = PreprocesadorSimbolico(numero_estados=3)
-            traductor_otros.alfabeto = ['O1', 'O2', 'O3']
-            sim_otros = traductor_otros.transformar(sec_otros) or "A"
+            sim_otros = "A"
+            if sec_otros:
+             traductor_otros = PreprocesadorSimbolico(numero_estados=3)
+             traductor_otros.alfabeto = ['O1', 'O2', 'O3']
+             sim_otros = traductor_otros.transformar(sec_otros) or "A"
 
-        registros = self.db.entrenamiento()
-        genero_predicho = "Entrenamiento"
-        probabilidades = {}
+            registros = self.db.entrenamiento()
+            genero_predicho = "Entrenamiento"
+            probabilidades = {}
 
-        if registros:
-            hmm = ClasificadorEstructuraHMM(numero_estados_ocultos=3)
-            hmm.entrenar_modelos(registros)
-            genero_predicho, probabilidades = hmm.predecir_genero(sim_bat, sim_voz, sim_bajo, sim_otros)
+            if registros:
+             hmm = ClasificadorEstructuraHMM(numero_estados_ocultos=3)
+             hmm.entrenar_modelos(registros)
+             genero_predicho, probabilidades = hmm.predecir_genero(sim_bat, sim_voz, sim_bajo, sim_otros)
 
-        nombre_pista = os.path.basename(ruta_mp3)
-        self.db.guardar_registro(
+            nombre_pista = os.path.basename(ruta_mp3)
+            self.db.guardar_registro(
             nombre_pista=nombre_pista,
             bpm=float(bpm),
             golpes=int(len(tiempos)),
@@ -75,9 +77,9 @@ class ControladorAnalisis:
             cadena_bajo=sim_bajo,
             cadena_otros=sim_otros,
             genero=genero_predicho
-        )
+            )
 
-        return {
+            return {
             "nombre_pista": nombre_pista,
             "bpm": float(bpm),
             "golpes": len(tiempos),
@@ -90,4 +92,9 @@ class ControladorAnalisis:
             },
             "genero_predicho": genero_predicho,
             "probabilidades_hmm": probabilidades
-        }
+            }
+        except ValueError as ve:
+              raise ValueError(f"Error en el archivo: {str(ve)}")
+        except Exception as e:
+              raise RuntimeError(f"Ocurrio un error al procesar la cancion: {str(e)}")
+    

@@ -1,13 +1,28 @@
 from sklearn.mixture import GaussianMixture
 import numpy as np
 import matplotlib.pyplot as plt
+import joblib
+import os
 
 class PreprocesadorSimbolico:
     def __init__(self, numero_estados=3):
         self.numero_estados = numero_estados
+        self.ruta_modelo = self.ruta_modelo
         self.modelo = GaussianMixture(n_components=self.numero_estados, covariance_type='full', random_state=42)
         self.alfabeto = ['A', 'B', 'C', 'D', 'E']
+        self.cargar_modelo()
 
+    def cargar_modelo(self):
+        if os.path.exists(self.ruta_modelo):
+            try:
+                self.modelo = joblib.load(self.ruta_modelo)
+                print(f"Se cargo de forma correcta el modelo desde {self.ruta_modelo}")
+            except Exception as e:
+                print(f"No se pudo cargar el modelo: {e}")
+    def guardar_modelo(self):
+        joblib.dump(self.modelo, self.ruta_modelo)
+        print(f"Modelo guardado en {self.ruta_modelo}")
+        
     def transformar(self, secuencia_datos):
         print(f"\nEntrenando modelo Gaussiano sobre {len(secuencia_datos)} vectores...")
         if len(secuencia_datos) < self.numero_estados:
@@ -17,6 +32,7 @@ class PreprocesadorSimbolico:
         matriz = np.array(secuencia_datos)
         
         self.modelo.fit(matriz)
+        self.guardar_modelo()
         etiquetas_numericas = self.modelo.predict(matriz)
         
         secuencia_letras = [self.alfabeto[etiqueta] for etiqueta in etiquetas_numericas]
@@ -50,12 +66,13 @@ class PreprocesadorSimbolico:
         
         for i in range(self.numero_estados):
             puntos_grupo = matriz[etiquetas == i]
-            plt.scatter(puntos_grupo[:, 0], puntos_grupo[:, 1], c=colores[i], label=f'Segmentos tipo {self.alfabeto[i]}', alpha=0.6, s=100)
-            plt.scatter(centroides[i, 0], centroides[i, 1], c=colores[i], marker='X', s=250, edgecolors='black')
+            ax.scatter(puntos_grupo[:, 0], puntos_grupo[:, 1], c=colores[i], label=f'Segmentos tipo {self.alfabeto[i]}', alpha=0.6, s=100)
+            ax.scatter(centroides[i, 0], centroides[i, 1], c=colores[i], marker='X', s=250, edgecolors='black')
             
-        plt.title("Análisis Estructural")
-        plt.xlabel("Velocidad del Segmento")
-        plt.ylabel("Densidad Rítmica")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+        ax.title("Análisis Estructural")
+        ax.xlabel("Velocidad del Segmento")
+        ax.ylabel("Densidad Rítmica")
+        ax.legend()
+        ax.grid(True)
+        fig.tight_layout()
+        return fig
