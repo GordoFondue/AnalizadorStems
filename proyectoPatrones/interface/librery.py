@@ -263,7 +263,9 @@ class Librery (QWidget):
 				menu = GestorMenuContextual.crear_menu_libreria(
 					self,
 					nombre_pista,
-					callback_ver_separacion = self.ir_a_pestana_separacion
+					callback_ver_separacion = self.ir_a_pestana_separacion,
+					callback_ver_clasificaion = self.ir_a_pestana_clasificacion
+					
 				)
 				menu.exec(punto)
 
@@ -273,3 +275,9 @@ class Librery (QWidget):
 		if hasattr(ventana_principal,"tabs"):
 			ventana_principal.tabs.setCurrentIndex(1)
 			ventana_principal.pestana_separacion.cargar_pista_seleccionada(nombre_pista)
+
+	def ir_a_pestana_clasificacion(self, nombre_pista):
+		ventana_principal = self.window()
+		if hasattr(ventana_principal, "tabs"):
+			ventana_principal.tabs.setCurrentIndex(2)
+			ventana_principal.pestna_clasificacion.cargar_pista_seleccionada(nombre_pista)

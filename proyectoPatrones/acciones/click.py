@@ -3,7 +3,7 @@ from PyQt6.QtGui import QAction
 
 class GestorMenuContextual:
 	@staticmethod
-	def crear_menu_libreria(parent, item_seleccionado, callback_ver_separacion):
+	def crear_menu_libreria(parent, nombre_pista, callback_ver_separacion, callback_ver_clasificacion):
 		menu = QMenu (parent)
 		menu.setStyleSheet("""
 			QMenu{
@@ -24,8 +24,12 @@ class GestorMenuContextual:
 		""")
 
 		accion_separacion = QAction ("Ver Separación de Fuentes", parent)
-		accion_separacion.triggered.connect(lambda: callback_ver_separacion(item_seleccionado))
+		accion_separacion.triggered.connect(lambda: callback_ver_separacion(nombre_pista))
 		menu.addAction(accion_separacion)
+
+		accion_clasificacion = QAction("Ver Clasificación y Análisis HMM", parent)
+		accion_clasificacion.triggered.connect(lambda: callback_ver_clasificacion(nombre_pista))
+		menu.addAction(accion_clasificacion)
 
 		return menu
 		
