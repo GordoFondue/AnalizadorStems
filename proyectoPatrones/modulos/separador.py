@@ -4,6 +4,12 @@ import librosa
 import soundfile as sf
 import numpy as np
 import re
+import gc
+
+try:
+    import torch
+except ImportError:
+    torch = None
 
 class MotorSeparacion:
     def __init__(self, carpeta_base_salida="pistas_separadas"):
@@ -34,6 +40,9 @@ class MotorSeparacion:
 
         os.makedirs(os.path.dirname(ruta_salida), exist_ok=True)
         sf.write(ruta_salida, Y_norma.T if Y_norma.ndim > 1 else Y_norma, sr)
+
+        del y, Y_norma
+        gc.collect()
         return ruta_salida
 
     def procesar_pista(self, ruta_cancion, callback_progreso=None):
@@ -63,33 +72,44 @@ class MotorSeparacion:
         )
 
         patron_procentaje = re.compile(r"(\d+)%")
-
-        for linea in proceso.stdout:
-            print(linea, end="")
+        
+        try:
+            for linea in proceso.stdout:
+              print(linea, end="")
             match = patron_procentaje.search(linea)
             if match and callback_progreso:
                 porcentaje = int(match.group(1))
                 callback_progreso(porcentaje)
 
-        proceso.wait()
-        if proceso.returncode != 0:
-            raise RuntimeError("El proceso de separacion con Demucs fallo")
+            proceso.wait()
+            if proceso.returncode != 0:
+              raise RuntimeError("El proceso de separacion con Demucs fallo")
         
-        self.ruta_salida = directorio_destino
+            self.ruta_salida = directorio_destino
         
-        def encontrar_stem(nombre_stem):
-            for raiz, _, archivos in os.walk(directorio_destino):
-                if f"{nombre_stem}.wav" in archivos:
+            def encontrar_stem(nombre_stem):
+                for raiz, _, archivos in os.walk(directorio_destino):
+                 if f"{nombre_stem}.wav" in archivos:
                     return os.path.join(raiz, f"{nombre_stem}.wav")
-            raise FileNotFoundError(f"No se encontró el archivo {nombre_stem}.wav en {directorio_destino}")
-
-        stems = {
-            "bateria": encontrar_stem("drums"),
+                raise FileNotFoundError(f"No se encontró el archivo {nombre_stem}.wav en {directorio_destino}")
+ 
+            stems = {
+                "bateria": encontrar_stem("drums"),
             "voz": encontrar_stem("vocals"),
             "bajo": encontrar_stem("bass"),
             "otros": encontrar_stem("other")
-        }
+            }
 
-        print(f"Separación completada exitosamente.")
-        
-        return stems
+            print(f"Separación completada exitosamente.")
+            return stems
+    
+        finally:
+
+            if proceso.stdout:
+                proceso.stdout.close()
+                gc.collect()
+
+                if torch is not None and torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                    print("Se libero la caché")
+            
