@@ -22,6 +22,27 @@ class PreprocesadorSimbolico:
     def guardar_modelo(self):
         joblib.dump(self.modelo, self.ruta_modelo)
         print(f"Modelo guardado en {self.ruta_modelo}")
+
+    
+    def configurar_GMM(self, secuencia_datos):
+
+        if len(secuencia_datos) < self.numero_estados:
+            return None
+        
+        mejores_params = optimizar_GMM(secuencia_datos, self.numero_estados)
+        self.modelo = GaussianMixture(
+            n_components=self.numero_estados,
+            covariance_type=mejores_params['covariance_type'],
+            max_iter=mejores_params['max_iter'],
+            random_state=42
+        )
+
+        matriz = np.array(secuencia_datos)
+        self.modelo.fit(matriz)
+        self.guardar_modelo()
+        etiquetas_num = self.modelo.predict(matriz)
+        return "_".join([self.alfabeto[e] for e in etiquetas_num])
+    
         
     def transformar(self, secuencia_datos):
         print(f"\nEntrenando modelo Gaussiano sobre {len(secuencia_datos)} vectores...")

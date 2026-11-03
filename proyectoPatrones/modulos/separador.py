@@ -91,4 +91,5 @@ class MotorSeparacion:
         }
 
         print(f"Separación completada exitosamente.")
+        
         return stems
