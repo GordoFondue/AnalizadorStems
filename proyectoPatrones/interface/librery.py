@@ -264,7 +264,7 @@ class Librery (QWidget):
 					self,
 					nombre_pista,
 					callback_ver_separacion = self.ir_a_pestana_separacion,
-					callback_ver_clasificaion = self.ir_a_pestana_clasificacion
+					callback_ver_clasificacion = self.ir_a_pestana_clasificacion
 					
 				)
 				menu.exec(punto)
@@ -280,4 +280,4 @@ class Librery (QWidget):
 		ventana_principal = self.window()
 		if hasattr(ventana_principal, "tabs"):
 			ventana_principal.tabs.setCurrentIndex(2)
-			ventana_principal.pestna_clasificacion.cargar_pista_seleccionada(nombre_pista)
+			ventana_principal.pestana_clasificacion.cargar_pista_seleccionada(nombre_pista)

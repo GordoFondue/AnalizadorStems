@@ -172,7 +172,7 @@ class ClasificacionHMM(QWidget):
 			print(f"Error al cargar historial de cllasificacion: {e}")
 			
 			
-	def cargar_psita_seleccionada(self, nombre_pista):
+	def cargar_pista_seleccionada(self, nombre_pista):
 		if nombre_pista not in self.pistas_guardadas:
 			self.pistas_guardadas.append(nombre_pista)
 		self.actualizar_lista_visual(self.pistas_guardadas)
