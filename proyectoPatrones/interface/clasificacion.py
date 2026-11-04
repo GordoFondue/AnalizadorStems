@@ -211,53 +211,53 @@ class ClasificacionHMM(QWidget):
 			if widget:
 				widget.deleteLater()
 
-			fig_resumen = Figure(figsize=  (5,2.5))
-			ax1= fig_resumen.add_subplot(111)
-			ax1.set_facecolor("#181818")
-			fig_resumen.patch.set_facecolor('#181818')
+		fig_resumen = Figure(figsize=  (5,2.5))
+		ax1= fig_resumen.add_subplot(111)
+		ax1.set_facecolor("#181818")
+		fig_resumen.patch.set_facecolor('#181818')
 
-			texto_resumen = (
-				f"Pista: {pista}\n"
-				f"Género Predicho (HMM): {genero}\n"
-				f"BPM: {bpm:.1f} | Golpes Totales: {golpes}"
-			)
+		texto_resumen = (
+			f"Pista: {pista}\n"
+			f"Género Predicho (HMM): {genero}\n"
+			f"BPM: {bpm:.1f} | Golpes Totales: {golpes}"
+		)
 
-			ax1.text(0.05,0.5, texto_resumen, color='#ffffff', fontsize=11, verticalalignment='center')
-			self.grid_tarjetas.addWidget(TarjetaGrafica("Resumen de Clasificación HMM", fig_resumen), 0,0)
+		ax1.text(0.05,0.5, texto_resumen, color='#ffffff', fontsize=11, verticalalignment='center')
+		self.grid_tarjetas.addWidget(TarjetaGrafica("Resumen de Clasificación HMM", fig_resumen), 0,0)
 
-			fig_sintaxis = Figure(figsize=(5, 2.5))
-			ax2= fig_sintaxis.add_subplot(111)
-			ax2.set_facecolor('#181818')
-			fig_sintaxis.patch.set_facecolor('#181818')
+		fig_sintaxis = Figure(figsize=(5, 2.5))
+		ax2= fig_sintaxis.add_subplot(111)
+		ax2.set_facecolor('#181818')
+		fig_sintaxis.patch.set_facecolor('#181818')
 
-			texto_sintaxis = (
-				f"Bateria [A-E]: {bat}\n"
-				f"Voz [X-Z]: {voz}\n"
-				f"Bajo [B1-B3]: {bajo}\n"
-				f"Otros [01-03]: {otros}"
-			)
+		texto_sintaxis = (
+			f"Bateria [A-E]: {bat}\n"
+			f"Voz [X-Z]: {voz}\n"
+			f"Bajo [B1-B3]: {bajo}\n"
+			f"Otros [01-03]: {otros}"
+		)
 
-			ax2.text(0.05,0.5, texto_sintaxis, color='#1db954', fontsize=11, fontweight='bold', verticalalignment='center')
-			ax2.axis('off')
-			self.grid_tarjetas.addWidget(TarjetaGrafica("Cadenas Simbólicas por Stem", fig_sintaxis),0,1)
-			fig_grafica = Figure(figsize =(5,3))
-			ax3 = fig_grafica.add_subplot(111)
-			ax3.set_facecolor('#181818')
-			fig_grafica.patch.set_facecolor('#181818')
+		ax2.text(0.05,0.5, texto_sintaxis, color='#1db954', fontsize=11, fontweight='bold', verticalalignment='center')
+		ax2.axis('off')
+		self.grid_tarjetas.addWidget(TarjetaGrafica("Cadenas Simbólicas por Stem", fig_sintaxis),0,1)
+		fig_grafica = Figure(figsize =(5,3))
+		ax3 = fig_grafica.add_subplot(111)
+		ax3.set_facecolor('#181818')
+		fig_grafica.patch.set_facecolor('#181818')
 
-			stems_nombre = ['Batería','Voz','Bajo','Otros']
+		stems_nombre = ['Batería','Voz','Bajo','Otros']
 
-			longitudes = [len(bat.split('-')),len(voz.split('-')),len(bajo.split('-')),len(otros.split('-'))]
+		longitudes = [len(bat.split('-')),len(voz.split('-')),len(bajo.split('-')),len(otros.split('-'))]
 
-			ax3.bar(stems_nombre, longitudes, color ='#1db954', alpha= 0.8)
-			ax3.set_title("Densidad de Ventanas por Stem", color= '#ffffff', fontsize=10)
-			ax3.tick_params(colors='#3d3d3d')
-			ax3.spines['bottom'].set_color('#3d3d3d')
-			ax3.spines['left'].set_color('#3d3d3d')
-			ax3.spines['top'].set_visible(False)
-			ax3.spines['right'].set_visible(False)
+		ax3.bar(stems_nombre, longitudes, color ='#1db954', alpha= 0.8)
+		ax3.set_title("Densidad de Ventanas por Stem", color= '#ffffff', fontsize=10)
+		ax3.tick_params(colors='#3d3d3d')
+		ax3.spines['bottom'].set_color('#3d3d3d')
+		ax3.spines['left'].set_color('#3d3d3d')
+		ax3.spines['top'].set_visible(False)
+		ax3.spines['right'].set_visible(False)
 
-			self.grid_tarjetas.addWidget(TarjetaGrafica ("Métricas Estructurales de Stems", fig_grafica), 1,0,1,2)
+		self.grid_tarjetas.addWidget(TarjetaGrafica ("Métricas Estructurales de Stems", fig_grafica), 1,0,1,2)
 
 	def filtrar_historial(self, texto):
 		texto = texto.lower()
