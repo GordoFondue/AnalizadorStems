@@ -83,17 +83,27 @@ class PreprocesadorSimbolico:
             print(f"Símbolo {self.alfabeto[i]} -> Media: {bpm_centro:.1f} BPM, {golpes_centro:.2f} golpes/segundo")
             
         fig, ax = plt.subplots(figsize=(10, 6))
+        fig.patch.set_facecolor('#181818')
+        ax.set_facecolor('#181818')
+        
         colores = ['blue', 'green', 'red', 'purple', 'orange']
         
         for i in range(self.numero_estados):
             puntos_grupo = matriz[etiquetas == i]
-            ax.scatter(puntos_grupo[:, 0], puntos_grupo[:, 1], c=colores[i], label=f'Segmentos tipo {self.alfabeto[i]}', alpha=0.6, s=100)
+            if len(puntos_grupo) > 0 :
+            	ax.scatter(puntos_grupo[:, 0], puntos_grupo[:, 1], c=colores[i], label=f'Segmentos tipo {self.alfabeto[i]}', alpha=0.6, s=100)
             ax.scatter(centroides[i, 0], centroides[i, 1], c=colores[i], marker='X', s=250, edgecolors='black')
             
-        ax.title("Análisis Estructural")
-        ax.xlabel("Velocidad del Segmento")
-        ax.ylabel("Densidad Rítmica")
-        ax.legend()
-        ax.grid(True)
+        ax.set_title("Análisis Estructural", color="#ffffff", fontsize=11)
+        ax.set_xlabel("Velocidad del Segmento", color="#a0a0a0", fontsize=9)
+        ax.set_ylabel("Densidad Rítmica", color="#a0a0a0", fontsize=9)
+        
+        ax.tick_params(colors='#a0a0a0')
+        ax.spines['bottom'].set_color('#3d3d3d')
+        ax.spines['left'].set_color('#3d3d3d')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        ax.legend(facecolor='#181818', edgecolor='none', labelcolor='#ffffff', fontsize=8 )
         fig.tight_layout()
         return fig

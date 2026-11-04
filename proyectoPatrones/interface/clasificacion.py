@@ -11,6 +11,8 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from modulos.database import GestorBaseDatos
+from modulos.simbolico import PreprocesadorSimbolico
+from modulos.analizador import AnalizadorPercusion
 
 class TarjetaGrafica(QFrame):
 	def __init__(self,titulo_tarjeta, figura):
@@ -30,7 +32,8 @@ class TarjetaGrafica(QFrame):
 		""")
 
 		layout = QVBoxLayout()
-		layout.setContentsMargins (15,15,15,15)
+		layout.setContentsMargins (12,12,12,12)
+		layout.setSpacing(8)
 
 		self.lbl_titulo= QLabel(self.titulo_tarjeta)
 		self.lbl_titulo.setStyleSheet("""
@@ -211,7 +214,7 @@ class ClasificacionHMM(QWidget):
 			if widget:
 				widget.deleteLater()
 
-		fig_resumen = Figure(figsize=  (5,2.5))
+		fig_resumen = Figure(figsize=  (5,1.8))
 		ax1= fig_resumen.add_subplot(111)
 		ax1.set_facecolor("#181818")
 		fig_resumen.patch.set_facecolor('#181818')
@@ -223,9 +226,10 @@ class ClasificacionHMM(QWidget):
 		)
 
 		ax1.text(0.05,0.5, texto_resumen, color='#ffffff', fontsize=11, verticalalignment='center')
+		ax1.axis('off')
 		self.grid_tarjetas.addWidget(TarjetaGrafica("Resumen de Clasificación HMM", fig_resumen), 0,0)
 
-		fig_sintaxis = Figure(figsize=(5, 2.5))
+		fig_sintaxis = Figure(figsize=(5, 1.8))
 		ax2= fig_sintaxis.add_subplot(111)
 		ax2.set_facecolor('#181818')
 		fig_sintaxis.patch.set_facecolor('#181818')
@@ -240,7 +244,8 @@ class ClasificacionHMM(QWidget):
 		ax2.text(0.05,0.5, texto_sintaxis, color='#1db954', fontsize=11, fontweight='bold', verticalalignment='center')
 		ax2.axis('off')
 		self.grid_tarjetas.addWidget(TarjetaGrafica("Cadenas Simbólicas por Stem", fig_sintaxis),0,1)
-		fig_grafica = Figure(figsize =(5,3))
+		
+		fig_grafica = Figure(figsize =(10,2.8))
 		ax3 = fig_grafica.add_subplot(111)
 		ax3.set_facecolor('#181818')
 		fig_grafica.patch.set_facecolor('#181818')
@@ -256,8 +261,47 @@ class ClasificacionHMM(QWidget):
 		ax3.spines['left'].set_color('#3d3d3d')
 		ax3.spines['top'].set_visible(False)
 		ax3.spines['right'].set_visible(False)
+		fig_grafica.tight_layout()
 
 		self.grid_tarjetas.addWidget(TarjetaGrafica ("Métricas Estructurales de Stems", fig_grafica), 1,0,1,2)
+
+		try:
+			nombre_limpio= os.path.splitext(pista)[0]
+			ruta_bateria = os.path.join("pistas_separadas", nombre_limpio, "htdemucs", nombre_limpio, "drums.wav")
+
+			if os.path.exists(ruta_bateria):
+				analizador_perc= AnalizadorPercusion(ruta_bateria)
+				sec_bateria= analizador_perc.secuencia_temporal(ventana_segundos=10)
+
+				if sec_bateria and len(sec_bateria) >= 3:
+					preprocesador = PreprocesadorSimbolico(numero_estados=3)
+					preprocesador.transformar(sec_bateria)
+					
+					fig_dispersion= preprocesador.graficar(sec_bateria)
+					if fig_dispersion:
+						fig_dispersion.set_size_inches(6,3.5)
+						fig_dispersion.tight_layout()
+						self.grid_tarjetas.addWidget(TarjetaGrafica("Gráfica de Dispersión GMM (Batería)", fig_dispersion),2,0,1,2)
+
+					fig_info_gmm = Figure(figsize=(4,3.5))
+					ax_info = fig_info_gmm.add_subplot(111)
+					ax_info.set_facecolor('#181818')
+					fig_info_gmm.patch.set_facecolor('#181818')
+
+					centroides = preprocesador.modelo.means_
+					detalles_texto= "Centeroides GMM (Bateria): \n \n"
+
+					for idx,centro in eneumerate(centroides):
+						simbolo = preprocesador.alfabeto[idx]
+						detalles_texto += f"• Símbolo {simbolo}:\n  {centro[0]:.1f} BPM | {centro[1]:.2f} golpes/s\n\n"
+
+					ax_info.text(0.05,0.5,detalles_texto,color='#e0e0e0',fontsize=9, verticalalignment='center')
+					ax_info.axis('off')
+					fig_info_gmm.tight_layout()
+
+					self.grid_tarjetas.addWidget(arjetaGrafica("Detalles de Estados GMM", fig_info_gmm), 2, 1)
+		except Exception as e:
+			print (f"No se pudo cargar la gráfica de dispersión GMM: {e}")
 
 	def filtrar_historial(self, texto):
 		texto = texto.lower()
