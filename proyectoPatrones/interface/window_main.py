@@ -1,9 +1,11 @@
 import sys
 from PyQt6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QTabWidget
+from PyQt6.QtGui import QAction
 
 from interface.librery import Librery
 from interface.separacion import Separacion
 from interface.clasificacion import ClasificacionHMM
+from ventanas.ayuda import DialogoAyuda
 
 class WindowMain(QMainWindow):
     def __init__(self):
@@ -14,7 +16,7 @@ class WindowMain(QMainWindow):
 
         self._inicializar_ui()
 
-    def _inicializar_ui(self):
+    def _inicializar_ui(self):        
         widget_central = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -58,3 +60,7 @@ class WindowMain(QMainWindow):
         layout.addWidget(self.tabs)
         widget_central.setLayout(layout)
         self.setCentralWidget(widget_central)
+
+    def mostrar_ventana_ayuda(self):
+        dialogo = DialogoAyuda(self)
+        dialogo.exec()

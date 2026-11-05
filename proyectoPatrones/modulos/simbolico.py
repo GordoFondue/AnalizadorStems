@@ -91,7 +91,7 @@ class PreprocesadorSimbolico:
         for i in range(self.numero_estados):
             puntos_grupo = matriz[etiquetas == i]
             if len(puntos_grupo) > 0 :
-            	ax.scatter(puntos_grupo[:, 0], puntos_grupo[:, 1], c=colores[i], label=f'Segmentos tipo {self.alfabeto[i]}', alpha=0.6, s=100)
+                ax.scatter(puntos_grupo[:, 0], puntos_grupo[:, 1], c=colores[i], label=f'Segmentos tipo {self.alfabeto[i]}', alpha=0.6, s=100)
             ax.scatter(centroides[i, 0], centroides[i, 1], c=colores[i], marker='X', s=250, edgecolors='black')
             
         ax.set_title("Análisis Estructural", color="#ffffff", fontsize=11)

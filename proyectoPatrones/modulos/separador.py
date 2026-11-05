@@ -65,10 +65,10 @@ class MotorSeparacion:
         ]
 
         proceso = subprocess.Popen(
-        	comando,
-        	stdout=subprocess.PIPE,
-        	stderr=subprocess.STDOUT,
-        	universal_newlines=True
+            comando,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True
         )
 
         patron_procentaje = re.compile(r"(\d+)%")
