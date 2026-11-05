@@ -57,11 +57,13 @@ class MotorSeparacion:
 
         print(f"Separando stems para '{nombre_cancion}'...")
 
+        import sys
         comando = [
-            "demucs",
+            sys.executable,
+            "-m", "demucs.separate",
             "-n", "htdemucs",
             "-o", directorio_destino,
-            ruta_cancion
+            ruta_procesada
         ]
 
         proceso = subprocess.Popen(
