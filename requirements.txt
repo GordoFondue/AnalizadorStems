@@ -1,0 +1,10 @@
+demucs==4.1.0
+hmmlearn==0.3.3
+librosa==1.0.0
+matplotlib==3.11.2
+numpy==2.5.4
+PyQt6==6.11.0
+PyQt6-Qt6==6.11.2
+PyQt6_sip==13.13.0
+scikit-learn==1.9.1
+soundfile==0.14.0
