@@ -70,19 +70,31 @@ class MotorSeparacion:
             comando,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            universal_newlines=True
+            text=True,
+            bufsize=1
         )
 
-        patron_procentaje = re.compile(r"(\d+)%")
+        patron_porcentaje = re.compile(r"(\d{1,3})%")
         
         try:
-            for linea in proceso.stdout:
-              print(linea, end="")
-            match = patron_procentaje.search(linea)
-            if match and callback_progreso:
-                porcentaje = int(match.group(1))
-                callback_progreso(porcentaje)
-
+            linea_actual= ""
+            while True:
+            	char= proceso.stdout.read(1)
+            	if not char and proceso.poll() is not None:
+            	    break
+            	if char:
+            	    if char == '\r' or char == '\n':
+            	        if linea_actual.strip():
+            	        	print(linea_actual)
+            	        	match = patron_porcentaje.search(linea_actual)
+            	        	if match and callback_progreso:
+            	        	    porcentaje = int(match.group(1))
+            	        	    if 0 <= porcentaje <= 100:
+            	        	        callback_progreso(porcentaje)
+            	        linea_actual = ""
+            	    else:
+            	        linea_actual += char
+            	        
             proceso.wait()
             if proceso.returncode != 0:
               raise RuntimeError("El proceso de separacion con Demucs fallo")

@@ -26,7 +26,7 @@ class WorkerProcesamiento(QThread):
             self.terminado.emit(nombre_limpio)
             
         except Exception as e:
-            print(f"[-] Error crítico en el worker independiente: {e}")
+            print(f"Error crítico en el worker independiente: {e}")
             self.error.emit(str(e))
 
     def notificar_progreso(self,valor):
