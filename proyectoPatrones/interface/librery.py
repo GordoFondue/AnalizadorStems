@@ -6,11 +6,16 @@ from PyQt6.QtWidgets import (
 )
 
 from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtWidgets import QInputDialog
+from PyQt6.QtWidgets import QMessageBox
+
 from modulos.database import GestorBaseDatos
 from conexion.worker import WorkerProcesamiento
 from ventanas.dialogos import GestorDiagnostico
 from acciones.click import GestorMenuContextual
 from ventanas.ayuda import DialogoAyuda
+
+
 class Librery (QWidget):
 
     def __init__ (self):
@@ -283,7 +288,9 @@ class Librery (QWidget):
                     self,
                     nombre_pista,
                     callback_ver_separacion = self.ir_a_pestana_separacion,
-                    callback_ver_clasificacion = self.ir_a_pestana_clasificacion
+                    callback_ver_clasificacion = self.ir_a_pestana_clasificacion,
+                    callback_editar_genero = self.editar_genero_pista,
+                    callback_eliminar_registro = self.eliminar_registro_pista
                     
                 )
                 menu.exec(punto)
@@ -304,4 +311,46 @@ class Librery (QWidget):
     def mostrar_ventana_ayuda (self):
         dialogo = DialogoAyuda(self)
         dialogo.exec()
-    
+
+    def editar_genero_pista (self, nombre_pista):
+         try:
+             with sqlite3.connect(self.db.ruta_db) as conn:
+                 cursor = conn.cursor()
+                 cursor.execute("SELECT genero FROM pistas_entrenamiento WHERE nombre_archivo = ?", (nombre_pista,))
+                 res = cursor.fetchone()
+                 genero_actual = res[0] if res else ""
+
+             nuevo_genero = GestorDiagnostico.solicitar_nuevo_genero (self, nombre_pista, genero_actual)
+
+             if nuevo_genero:
+                 with sqlite3.connect(self.db.ruta_db) as conn:
+                     cursor = conn.cursor()
+                     cursor.execute("UPDATE pistas_entrenamiento SET genero = ? WHERE nombre_archivo = ?", (nuevo_genero, nombre_pista))
+                     conn.commit()
+
+                 self.cargar_datos_tabla()
+                 GestorDiagnostico.mostrar_exito(self, "Actualización Exitosa", f"El género de '{nombre_pista}' se actualizó a: {nuevo_genero}")
+         except Exception as e:
+             GestorDiagnostico.mostrar_error(self, "Error al Editar", f"No se pudo actualizar el género:\n{str(e)}")
+
+    def eliminar_registro_pista (self, nombre_pista):
+        confirmacion = QMessageBox.question(
+            self, 
+            "Confirmar Eliminación",
+            f"¿Estás seguro de eliminar el registro de '{nombre_pista}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if confirmacion == QMessageBox.StandardButton.Yes:
+            try: 
+                with sqlite3.connect(self.db.ruta_db) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("DELETE FROM pistas_entrenamiento WHERE nombre_archivo = ?", (nombre_pista,))
+                    conn.commit()
+
+                self.cargar_datos_tabla()
+                GestorDiagnostico.mostrar_exito(self, "Registro Eliminado",f"La pista '{nombre_pista}' fue eliminada de la base de datos.")
+            except Exception as e:
+                GestorDiagnostico.mostrar_error (self, "Error al Eliminar", f"No se pudo eliminar el registro:\n{str(e)}")
+        

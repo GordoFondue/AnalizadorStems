@@ -3,7 +3,7 @@ from PyQt6.QtGui import QAction
 
 class GestorMenuContextual:
     @staticmethod
-    def crear_menu_libreria(parent, nombre_pista, callback_ver_separacion, callback_ver_clasificacion):
+    def crear_menu_libreria(parent, nombre_pista, callback_ver_separacion, callback_ver_clasificacion, callback_editar_genero, callback_eliminar_registro):
         menu = QMenu (parent)
         menu.setStyleSheet("""
             QMenu{
@@ -30,6 +30,14 @@ class GestorMenuContextual:
         accion_clasificacion = QAction("Ver Clasificación y Análisis HMM", parent)
         accion_clasificacion.triggered.connect(lambda: callback_ver_clasificacion(nombre_pista))
         menu.addAction(accion_clasificacion)
+
+        accion_editar = QAction("Editar Género Manualmente",parent)
+        accion_editar.triggered.connect(lambda:callback_editar_genero(nombre_pista))
+        menu.addAction(accion_editar)
+
+        accion_eliminar = QAction("Eliminar Registro", parent)
+        accion_eliminar.triggered.connect(lambda:callback_eliminar_registro(nombre_pista))
+        menu.addAction(accion_eliminar)
 
         return menu
         
