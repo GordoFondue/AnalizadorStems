@@ -49,8 +49,9 @@ class MotorSeparacion:
         if not os.path.exists(ruta_cancion):
             raise FileNotFoundError(f"No se encontró el archivo de audio: {ruta_cancion}")
 
-        ruta_procesada = self.volumen_audio(ruta_cancion)
+        
         nombre_cancion = os.path.splitext(os.path.basename(ruta_cancion))[0]
+        ruta_procesada = self.volumen_audio(ruta_cancion, ruta_salida = os.path.join("separated",f"{nombre_cancion}.wav"))
         
         directorio_destino = os.path.join(self.carpeta_base_salida, nombre_cancion)
         os.makedirs(directorio_destino, exist_ok=True)

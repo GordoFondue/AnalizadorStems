@@ -282,7 +282,7 @@ class ClasificacionHMM(QWidget):
 
     def limpiar_analisis(self):
         self.pista_actual = None
-        self._vaciar_tarjeta()
+        self._vaciar_tarjetas()
         self.mostrar_tarjeta_bienvenida()
 
     def _vaciar_tarjetas(self):

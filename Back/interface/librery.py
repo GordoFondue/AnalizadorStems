@@ -329,6 +329,8 @@ class Librery (QWidget):
                      conn.commit()
 
                  self.cargar_datos_tabla()
+
+                 self._notificar_pista_eliminada(nombre_pista)
                  GestorDiagnostico.mostrar_exito(self, "Actualización Exitosa", f"El género de '{nombre_pista}' se actualizó a: {nuevo_genero}")
          except Exception as e:
              GestorDiagnostico.mostrar_error(self, "Error al Editar", f"No se pudo actualizar el género:\n{str(e)}")
@@ -354,3 +356,16 @@ class Librery (QWidget):
             except Exception as e:
                 GestorDiagnostico.mostrar_error (self, "Error al Eliminar", f"No se pudo eliminar el registro:\n{str(e)}")
         
+    def _notificar_pista_eliminada(self,nombre_pista):
+        ventana_principal = self.window()
+        for nombre_pestana in ("pestana_separacion","pestana_clasificacion"):
+            pestana = getattr(ventana_principal,nombre_pista,None)
+            if pestana is None:
+                return
+            pestana.cargar_historial_db()
+            if getattr(pestana, "pista_actual",None) ==nombre_pista:
+                if hasattr(pestana,"limpiar_stems"):
+                    pestana.limpiar_stems()
+                if hasattr(pestana,"limpiar_analisis"):
+                    pestana.limpiar_analisis()
+                
