@@ -2,6 +2,7 @@ import os
 import sqlite3
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QListWidget, QPushButton, QHBoxLayout, QLineEdit
 from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QUrl
 
 from interface.tarjeta import TarjetaStem
 from modulos.database import GestorBaseDatos
@@ -11,7 +12,37 @@ class Separacion(QWidget):
         super().__init__()
         self.pistas_guardadas = []
         self.db = GestorBaseDatos()
+        self.pista_actual = None
         self._inicializar_ui()
+        self.cargar_historial_db()
+
+    def showEvent(self,event):
+    	super().showEvent(event)
+    	self.cargar_historial_db()
+    	if self.pista_actual and self.pista_actual not in self.pistas_guardadas:
+    	    self.limpiar_stems()
+
+    def cargar_historial_db(self):
+        try:
+            with sqlite3.connect(self.db.ruta_db) as conexion:
+                cursor = conexion.cursor()
+                cursor.execute("SELECT nombre_archivo FROM pistas_entrenamiento")
+                self.pistas_guardadas = [reg[0] for reg in cursor.fetchall()]
+            self.filtrar_historial(self.input_buscar_sep.text())
+
+            if self.pista_actual:
+                items = self.listas_pistas.findItems(self.pista_actual, Qt.MatchFlag.MatchExactly)
+                if items:
+                    self.listas_pistas.blockSignals(True)
+                    self.listas_pistas.setCurrentItem(items[0])
+                    self.listas_pistas.blockSignals(False)
+        except Exception as e:
+            print(f"Error al cargar historial de separacion: {e}")
+    def limpiar_stems(self):
+        self.pista_actual = None
+        for tarjeta in self.tarjetas_stems.values():
+            tarjeta.player.stop()
+            tarjeta.player.setSource(QUrl())
 
     def _inicializar_ui(self):
         layout_principal = QHBoxLayout()
@@ -97,17 +128,19 @@ class Separacion(QWidget):
         self.setLayout(layout_principal)
 
     def cargar_pista_seleccionada(self,nombre_pista):
+        self.cargar_historial_db()
         if nombre_pista not in self.pistas_guardadas:
-            self.pistas_guardadas.append(nombre_pista)
-        self.actualizar_lista_visual(self.pistas_guardadas)
+            return
 
-        items = self.listas_pistas.findItems(nombre_pista, Qt.MatchFlag.MatchExactly if hasattr(Qt, 'MatchFlag') else 0 )
+        items = self.listas_pistas.findItems(nombre_pista, Qt.MatchFlag.MatchExactly)
         if items:
             self.listas_pistas.setCurrentItem(items[0])
 
     def cargar_stems_pista(self,nombre_pista):
         if not nombre_pista:
             return
+            
+        self.pista_actual= nombre_pista
 
         nombre_limpio = os.path.splitext(nombre_pista)[0]
 

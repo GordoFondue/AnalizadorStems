@@ -154,7 +154,7 @@ class ClasificacionHMM(QWidget):
     def showEvent(self,event):
         super().showEvent(event)
         self.cargar_historial_db()
-        if self.pista_actual and self.pista_actual not in self.pitas_guardadas:
+        if self.pista_actual and self.pista_actual not in self.pistas_guardadas:
             self.limpiar_analisis()
 
     def _inicializar_ui(self):
