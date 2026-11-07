@@ -79,22 +79,22 @@ class MotorSeparacion:
         try:
             linea_actual= ""
             while True:
-            	char= proceso.stdout.read(1)
-            	if not char and proceso.poll() is not None:
-            	    break
-            	if char:
-            	    if char == '\r' or char == '\n':
-            	        if linea_actual.strip():
-            	        	print(linea_actual)
-            	        	match = patron_porcentaje.search(linea_actual)
-            	        	if match and callback_progreso:
-            	        	    porcentaje = int(match.group(1))
-            	        	    if 0 <= porcentaje <= 100:
-            	        	        callback_progreso(porcentaje)
-            	        linea_actual = ""
-            	    else:
-            	        linea_actual += char
-            	        
+                char= proceso.stdout.read(1)
+                if not char and proceso.poll() is not None:
+                    break
+                if char:
+                    if char == '\r' or char == '\n':
+                        if linea_actual.strip():
+                            print(linea_actual)
+                            match = patron_porcentaje.search(linea_actual)
+                            if match and callback_progreso:
+                                porcentaje = int(match.group(1))
+                                if 0 <= porcentaje <= 100:
+                                    callback_progreso(porcentaje)
+                        linea_actual = ""
+                    else:
+                        linea_actual += char
+                        
             proceso.wait()
             if proceso.returncode != 0:
               raise RuntimeError("El proceso de separacion con Demucs fallo")
