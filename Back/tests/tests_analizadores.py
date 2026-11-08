@@ -50,7 +50,7 @@ def test_voz(audio_prueba):
     y, sr = audio_prueba
     
     with patch("librosa.load", return_value=(y, sr)):
-        analizador = AnalizadorBajo("stem_voz_falso.wav")
+        analizador = AnalizadorVoz("stem_voz_falso.wav")
         secuencia = analizador.secuencia_temporal(ventana_segundos=10)
         assert isinstance(secuencia, list)
         if len(secuencia) > 0:
@@ -59,7 +59,7 @@ def test_otros(audio_prueba):
     y, sr = audio_prueba
         
     with patch("librosa.load", return_value=(y, sr)):
-        analizador = AnalizadorBajo("stem_voz_falso.wav")
+        analizador = AnalizadorOtros("stem_voz_falso.wav")
         secuencia = analizador.secuencia_temporal(ventana_segundos=10)
         assert isinstance(secuencia, list)
         if len(secuencia) > 0:

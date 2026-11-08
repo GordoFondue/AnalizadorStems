@@ -75,6 +75,25 @@ class GestorBaseDatos:
                 print(f"[+] [Base de Datos] Se eliminó con éxito el registro de '{nombre}'.")
             else:
                 print("[-] [Base de Datos] La tabla está vacía, no hay nada que borrar.")
+
+    def limpiar_base(self):
+
+        query = "DELETE FROM pistas_entrenamiento"
+        self.ejecutar_consulta(query)
+        print("Se eliminaron los registros de prueba")
+
+    def eliminar_anomalias(self):
+
+        query = """""
+        DELETE FROM pistas_entrenamiento
+        WHERE bpm <= 0
+            OR total_golpes < 0
+            OR sintaxis_bateria = ''
+            OR sintaxis_bateria IS NULL
+        """""              
+        cursor = self.ejecutar_consulta(query)
+        print("Se eliminaron registros anomalos")
+
     def entrenamiento(self):
         query = """
         SELECT sintaxis_bateria, sintaxis_voz, sintaxis_bajo, sintaxis_otros, genero 
