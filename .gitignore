@@ -1,6 +1,15 @@
-__pycache__/
-   *.pyc
-   *.pyo
-   *.db
-   venv/
-   separated/
+**/separated/
+**/pistas_separadas/
+pistas_separadas/
+*.mp3
+*.wav
+
+*.db
+**/patrones_musicales.db
+
+**/__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.idea/
