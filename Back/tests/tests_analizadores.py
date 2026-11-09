@@ -1,7 +1,7 @@
 import os
 import pytest
 import sys
-sys.path.insert(0, r"C:\Users\bryan\Downloads\proyectoPatrones\proyectoPatrones")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 from unittest.mock import patch, MagicMock
 from modulos.analizador import AnalizadorPercusion

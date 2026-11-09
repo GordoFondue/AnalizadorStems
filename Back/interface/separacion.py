@@ -10,22 +10,33 @@ from interface.tarjeta import TarjetaStem
 from modulos.database import GestorBaseDatos
 from interface.barra_superior import BuscadorPistas, BannerEstados
 from ventanas.dialogos import GestorDiagnostico
+from modulos import config
+from modulos.seguridad import sanitizar_nombre, ruta_dentro_de, ErrorSeguridad
 
 
-def resolver_carpeta_stems(nombre_pista, raiz="pistas_separadas"):
+def resolver_carpeta_stems(nombre_pista, raiz=None):
+    """Localiza la carpeta de stems garantizando que NUNCA sale de `raiz`
+    (el nombre de pista viene de la BD/UI y no es de confianza)."""
+    raiz = raiz or config.CARPETA_STEMS
     limpio = os.path.splitext(nombre_pista)[0]
     partes = limpio.split(" - ")
     candidatos = [" - ".join(partes[i:]) for i in range(len(partes))]
 
+    def _seguro(c, *resto):
+        try:
+            return ruta_dentro_de(raiz, sanitizar_nombre(c), *resto)
+        except ErrorSeguridad:
+            return None
+
     for c in candidatos:
-        base = os.path.join(raiz, c, "htdemucs", c)
-        if os.path.isdir(base):
+        base = _seguro(c, "htdemucs", sanitizar_nombre(c))
+        if base and os.path.isdir(base):
             return base
     for c in candidatos:
-        base = os.path.join(raiz, c, "htdemucs", "temp_normalizado")
-        if os.path.isdir(base):
+        base = _seguro(c, "htdemucs", "temp_normalizado")
+        if base and os.path.isdir(base):
             return base
-    return os.path.join(raiz, limpio, "htdemucs", limpio)
+    return _seguro(limpio, "htdemucs", sanitizar_nombre(limpio)) or os.path.join(raiz, "_invalido")
 
 
 class Separacion(QWidget):
@@ -182,7 +193,7 @@ class Separacion(QWidget):
             "Other (Otros)": "other.wav"
         }
 
-        print(f"Buscando stems dinámicos para: {nombre_pista} en ruta: {base_path}")
+        print("Buscando stems de la pista seleccionada...")
 
         self.estado_stems = {n: None for n in stems_archivo}
         self.motivos_fallo = {}
@@ -200,10 +211,10 @@ class Separacion(QWidget):
                 if os.path.exists(ruta_completa):
                     tarjeta.player.setSource(QUrl())
                     tarjeta.cargar_archivo_stem(ruta_completa)
-                    print(f" Stem cargado con éxito ({nombre_stem}): {ruta_completa}")
+                    print(f" Stem cargado con éxito ({nombre_stem})")
 
                 else:
-                    print(f"Archivo no encontrado en disco para {nombre_stem}: {ruta_completa}")
+                    print(f"Archivo no encontrado en disco para {nombre_stem}")
                     tarjeta.player.stop()
                     tarjeta.player.setSource(QUrl())
                     self.estado_stems[nombre_stem] = False

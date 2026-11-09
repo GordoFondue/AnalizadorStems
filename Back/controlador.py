@@ -7,16 +7,18 @@ from modulos.otros import AnalizadorOtros
 from modulos.simbolico import PreprocesadorSimbolico
 from modulos.database import GestorBaseDatos
 from modulos.modeloHMM import ClasificadorEstructuraHMM
+from modulos import config
+from modulos.seguridad import validar_audio, ocultar_ruta
 
 class ControladorAnalisis:
     
-    def __init__(self, carpeta_salida="pistas_separadas", ruta_db="patrones_musicales.db"):
+    def __init__(self, carpeta_salida=None, ruta_db=None):
+        carpeta_salida = carpeta_salida or config.CARPETA_STEMS
         self.separador = MotorSeparacion(carpeta_base_salida=carpeta_salida)
         self.db = GestorBaseDatos(ruta_db=ruta_db)
 
     def procesar_audio(self, ruta_mp3: str, callback_progreso = None) -> dict:
-        if not os.path.exists(ruta_mp3):
-            raise FileNotFoundError(f"El archivo de audio no existe: {ruta_mp3}")
+        ruta_mp3 = validar_audio(ruta_mp3, config.TAMANO_MAX_AUDIO_MB)
 
         try:
             
@@ -96,5 +98,4 @@ class ControladorAnalisis:
         except ValueError as ve:
               raise ValueError(f"Error en el archivo: {str(ve)}")
         except Exception as e:
-              raise RuntimeError(f"Ocurrio un error al procesar la cancion: {str(e)}")
-    
+              raise RuntimeError(f"Ocurrio un error al procesar la cancion: {ocultar_ruta(e)}")

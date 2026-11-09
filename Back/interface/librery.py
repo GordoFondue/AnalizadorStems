@@ -14,6 +14,10 @@ from conexion.worker import WorkerProcesamiento
 from ventanas.dialogos import GestorDiagnostico
 from acciones.click import GestorMenuContextual
 from ventanas.ayuda import DialogoAyuda
+from modulos.seguridad import (
+    autenticar_admin, admin_configurado, validar_genero, ErrorSeguridad,
+    establecer_contrasena_admin
+)
 
 
 class Librery (QWidget):
@@ -312,7 +316,37 @@ class Librery (QWidget):
         dialogo = DialogoAyuda(self)
         dialogo.exec()
 
+    def _autorizar_admin(self):
+        if not admin_configurado():
+            nueva = GestorDiagnostico.solicitar_nueva_contrasena_admin(self)
+            if nueva is None:
+                return False
+            try:
+                establecer_contrasena_admin(nueva)
+            except ErrorSeguridad as e:
+                GestorDiagnostico.mostrar_advertencia(self, "Contraseña", str(e))
+                return False
+            GestorDiagnostico.mostrar_exito(
+                self, "Contraseña creada",
+                "La contraseña de administrador quedó guardada.")
+            return True
+
+        contrasena = GestorDiagnostico.solicitar_contrasena_admin(self)
+        if contrasena is None:
+            return False
+
+        try:
+            if autenticar_admin(contrasena):
+                return True
+            GestorDiagnostico.mostrar_advertencia(
+                self, "Acceso denegado", "Contraseña de administrador incorrecta.")
+        except ErrorSeguridad as e:
+            GestorDiagnostico.mostrar_advertencia(self, "Acceso denegado", str(e))
+        return False
+
     def editar_genero_pista (self, nombre_pista):
+         if not self._autorizar_admin():
+             return
          try:
              with sqlite3.connect(self.db.ruta_db) as conn:
                  cursor = conn.cursor()
@@ -323,6 +357,7 @@ class Librery (QWidget):
              nuevo_genero = GestorDiagnostico.solicitar_nuevo_genero (self, nombre_pista, genero_actual)
 
              if nuevo_genero:
+                 nuevo_genero = validar_genero(nuevo_genero)
                  with sqlite3.connect(self.db.ruta_db) as conn:
                      cursor = conn.cursor()
                      cursor.execute("UPDATE pistas_entrenamiento SET genero = ? WHERE nombre_archivo = ?", (nuevo_genero, nombre_pista))
@@ -368,4 +403,3 @@ class Librery (QWidget):
                     pestana.limpiar_stems()
                 if hasattr(pestana,"limpiar_analisis"):
                     pestana.limpiar_analisis()
-                

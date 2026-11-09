@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QMessageBox
-from PyQt6.QtWidgets import QInputDialog
+from PyQt6.QtWidgets import QInputDialog, QLineEdit
 
 class GestorDiagnostico:
     @staticmethod
@@ -40,3 +40,40 @@ class GestorDiagnostico:
         if ok and nuevo_genero.strip():
             return nuevo_genero.strip()
         return None
+
+    @staticmethod
+    def solicitar_contrasena_admin(parent):
+        """Devuelve la contraseña escrita, o None si el usuario cancela."""
+        texto, ok = QInputDialog.getText(
+            parent,
+            "Acceso de administrador",
+            "Ingresa la contraseña de administrador:",
+            QLineEdit.EchoMode.Password
+        )
+        return texto if ok else None
+
+
+    @staticmethod
+    def solicitar_nueva_contrasena_admin(parent):
+        """Pide crear la contraseña de administrador (dos veces). Devuelve el texto, o None si cancela
+        o si las dos entradas no coinciden."""
+        c1, ok = QInputDialog.getText(
+            parent,
+            "Crear contraseña de administrador",
+            "Aún no hay contraseña de administrador.\nCrea una (mínimo 8 caracteres):",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok:
+            return None
+        c2, ok = QInputDialog.getText(
+            parent,
+            "Crear contraseña de administrador",
+            "Repite la contraseña:",
+            QLineEdit.EchoMode.Password
+        )
+        if not ok:
+            return None
+        if c1 != c2:
+            GestorDiagnostico.mostrar_advertencia(parent, "Contraseña", "Las contraseñas no coinciden.")
+            return None
+        return c1

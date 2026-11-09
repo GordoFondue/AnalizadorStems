@@ -3,7 +3,6 @@
 pistas_separadas/
 *.mp3
 *.wav
-*.pkl
 
 *.db
 **/patrones_musicales.db
@@ -14,5 +13,13 @@ pistas_separadas/
 venv/
 .vscode/
 .idea/
-
-
+# --- Seguridad: secretos y datos locales (nunca versionar) ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.sqlite
+*.sqlite3
+*.db-journal
+separated/

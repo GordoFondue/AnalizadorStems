@@ -1,7 +1,35 @@
 import os 
 import sys
+import getpass
 from PyQt6.QtWidgets import QApplication, QFileDialog
 from controlador import ControladorAnalisis
+from modulos.seguridad import (
+    sanitizar_nombre, validar_genero, ErrorSeguridad,
+    autenticar_admin, admin_configurado
+)
+
+
+def pedir_contrasena_admin():
+    """Pide la contraseña (sin mostrarla). Devuelve True solo si es correcta."""
+    if not admin_configurado():
+        print("No hay contraseña de administrador configurada.")
+        print("Genera una con scripts/generar_hash_admin.py y colócala en el archivo .env.")
+        return False
+
+    for _ in range(3):
+        try:
+            try:
+                contrasena = getpass.getpass("Contraseña de administrador: ")
+            except (EOFError, KeyboardInterrupt):
+                print("\nAcceso cancelado.")
+                return False
+            if autenticar_admin(contrasena):
+                return True
+            print("Contraseña incorrecta.")
+        except ErrorSeguridad as e:
+            print(e)
+            return False
+    return False
 
 
 def poblar_base():
@@ -11,6 +39,11 @@ def poblar_base():
         app = QApplication(sys.argv)
 
     print("Poblador de la base de datos")
+
+    if not pedir_contrasena_admin():
+        print("Acceso denegado. Solo el administrador puede ingresar géneros.")
+        return
+    print("Acceso concedido.")
 
     controlador = ControladorAnalisis()
 
@@ -44,18 +77,18 @@ def poblar_base():
             continue
 
         nombres_archivo = os.path.basename(ruta_mp3)
-        print(f"Archivo seleccionado: {nombres_archivo}")
+        print("Archivo seleccionado correctamente")
 
         grupo = input("Ingresa el grupo o nombre del artista: ").strip()
         genero = input("Ingresa el genero al que pertenece").strip()
 
-        if not genero:
-            print("El genero no puede estar vacío")
+        try:
+            genero = validar_genero(genero)
+            nombre_final = sanitizar_nombre(
+                f"{grupo} - {nombres_archivo}" if grupo else nombres_archivo)
+        except ErrorSeguridad as e:
+            print(f"Entrada no válida: {e}")
             continue
-        if grupo:
-            nombre_final = f"{grupo} - {nombres_archivo}"
-        else:
-            nombre_final = nombres_archivo
 
         print(f"\n Separando stems para '{nombre_final}'...")
 
@@ -79,6 +112,6 @@ def poblar_base():
                 print("No se guardo la cancion")
 
         except Exception as e:
-            print(f"Ocurrio un error: {e}")
+            print("Ocurrio un error al procesar el archivo (revisa los datos ingresados).")
 if __name__ == "__main__":
     poblar_base()

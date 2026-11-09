@@ -5,6 +5,10 @@ import soundfile as sf
 import numpy as np
 import re
 import gc
+import sys
+
+from modulos import config
+from modulos.seguridad import sanitizar_nombre, ruta_dentro_de, validar_audio, ocultar_ruta
 
 try:
     import torch
@@ -12,17 +16,18 @@ except ImportError:
     torch = None
 
 class MotorSeparacion:
-    def __init__(self, carpeta_base_salida="pistas_separadas"):
-        self.carpeta_base_salida = carpeta_base_salida
+    def __init__(self, carpeta_base_salida=None):
+        self.carpeta_base_salida = carpeta_base_salida or config.CARPETA_STEMS
         self.ruta_salida = None
 
 
-    def volumen_audio(self, ruta_entrada, ruta_salida="separated/temp_normalizado.wav", target_rms_db=-20.0):
+    def volumen_audio(self, ruta_entrada, ruta_salida=None, target_rms_db=-20.0):
 
+        ruta_salida = ruta_salida or os.path.join(config.CARPETA_TEMPORAL, "temp_normalizado.wav")
         try:
             y, sr = librosa.load(ruta_entrada, sr=None)
         except Exception as e:
-            raise ValueError(f"El archivo no se pudo leer. Delate: {str(e)}")
+            raise ValueError(f"El archivo no se pudo leer. Detalle: {ocultar_ruta(e)}")
         if y is None or len(y) == 0:
             raise ValueError("El archivo no contiene datos legibles")
         
@@ -46,19 +51,18 @@ class MotorSeparacion:
         return ruta_salida
 
     def procesar_pista(self, ruta_cancion, callback_progreso=None):
-        if not os.path.exists(ruta_cancion):
-            raise FileNotFoundError(f"No se encontró el archivo de audio: {ruta_cancion}")
+        ruta_cancion = validar_audio(ruta_cancion, config.TAMANO_MAX_AUDIO_MB)
 
-        
-        nombre_cancion = os.path.splitext(os.path.basename(ruta_cancion))[0]
-        ruta_procesada = self.volumen_audio(ruta_cancion, ruta_salida = os.path.join("separated",f"{nombre_cancion}.wav"))
-        
-        directorio_destino = os.path.join(self.carpeta_base_salida, nombre_cancion)
+        nombre_cancion = os.path.splitext(sanitizar_nombre(os.path.basename(ruta_cancion)))[0]
+        ruta_procesada = self.volumen_audio(
+            ruta_cancion,
+            ruta_salida=ruta_dentro_de(config.CARPETA_TEMPORAL, f"{nombre_cancion}.wav"))
+
+        directorio_destino = ruta_dentro_de(self.carpeta_base_salida, nombre_cancion)
         os.makedirs(directorio_destino, exist_ok=True)
 
-        print(f"Separando stems para '{nombre_cancion}'...")
+        print("Separando stems...")
 
-        import sys
         comando = [
             sys.executable,
             "-m", "demucs.separate",
@@ -106,7 +110,7 @@ class MotorSeparacion:
                 for raiz, _, archivos in os.walk(directorio_destino):
                  if f"{nombre_stem}.wav" in archivos:
                     return os.path.join(raiz, f"{nombre_stem}.wav")
-                raise FileNotFoundError(f"No se encontró el archivo {nombre_stem}.wav en {directorio_destino}")
+                raise FileNotFoundError(f"No se encontró el stem {nombre_stem}.wav tras la separación")
  
             stems = {
                 "bateria": encontrar_stem("drums"),
@@ -119,6 +123,11 @@ class MotorSeparacion:
             return stems
     
         finally:
+            try:
+                if os.path.isfile(ruta_procesada) and ruta_procesada != ruta_cancion:
+                    os.remove(ruta_procesada)
+            except OSError:
+                pass
 
             if proceso.stdout:
                 proceso.stdout.close()
@@ -127,4 +136,3 @@ class MotorSeparacion:
                 if torch is not None and torch.cuda.is_available():
                     torch.cuda.empty_cache()
                     print("Se libero la caché")
-            
