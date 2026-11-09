@@ -13,3 +13,5 @@ pistas_separadas/
 venv/
 .vscode/
 .idea/
+.pkl
+

@@ -394,7 +394,7 @@ class ClasificacionHMM(QWidget):
 
         nombre_limpio= os.path.splitext(pista)[0]
         configuracion_stems = [
-            ("Bateria","drums.wav",AnalizadorPercusion,['A','B','C'] ,
+            ("Bateria","drums.wav",AnalizadorPercusion,['A','B','C','D','E'] ,
                 lambda sim, c: f" Simbolo {sim}:\n {c[0]:.1f} BPM | {c[1]:.2f} golpes /s\n\n"),
             ("Voz","vocals.wav",AnalizadorVoz, ['X','Y','Z'],
                 lambda sim, c:f"Simbolo {sim}:\n Energia: {c[0]:.1f} | Textura(ZCR): {c[1]:.2f}\n\n"),
