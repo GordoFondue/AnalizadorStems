@@ -3,6 +3,7 @@
 pistas_separadas/
 *.mp3
 *.wav
+*.pkl
 
 *.db
 **/patrones_musicales.db
@@ -13,5 +14,5 @@ pistas_separadas/
 venv/
 .vscode/
 .idea/
-.pkl
+
 
