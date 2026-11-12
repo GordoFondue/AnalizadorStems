@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 import joblib
 import os
 
+from modulos import config
+
 class PreprocesadorSimbolico:
-    def __init__(self, numero_estados=3, ruta_modelo="modelo_gmm.pkl"):
+    def __init__(self, numero_estados=3, ruta_modelo=None):
         self.numero_estados = numero_estados
-        self.ruta_modelo = ruta_modelo
+        self.ruta_modelo = ruta_modelo or config.RUTA_MODELO_GMM
         self.modelo = GaussianMixture(n_components=self.numero_estados, covariance_type='full', random_state=42)
         self.alfabeto = ['A', 'B', 'C', 'D', 'E']
         self.cargar_modelo()

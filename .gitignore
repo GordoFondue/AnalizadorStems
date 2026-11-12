@@ -23,3 +23,10 @@ venv/
 *.sqlite3
 *.db-journal
 separated/
+# --- Compilación y datos locales ---
+build/
+dist/
+respaldo/
+*.tar.gz
+*.pkl
+

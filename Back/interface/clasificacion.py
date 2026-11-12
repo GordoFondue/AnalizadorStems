@@ -12,6 +12,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from modulos.database import GestorBaseDatos
+from interface.separacion import resolver_carpeta_stems
 from modulos.simbolico import PreprocesadorSimbolico
 from modulos.analizador import AnalizadorPercusion
 from modulos.voz import AnalizadorVoz
@@ -408,11 +409,21 @@ class ClasificacionHMM(QWidget):
             if self._agregar_seccion_stem(fila,nombre_limpio,nombre,wav,clase_analizador,alfabeto,formato):
                 fila +=1
 
+        if fila == 1:
+            aviso = QLabel(
+                "No se encontraron los archivos de audio separados (stems) de esta pista, "
+                "por eso no se muestran las gráficas GMM por instrumento.\n"
+                "Vuelve a importarla en la Librería para generarlos de nuevo.")
+            aviso.setWordWrap(True)
+            aviso.setStyleSheet("color:#e0a030; font-size:13px; padding:12px;")
+            self.grid_tarjetas.addWidget(aviso, 1, 0)
+            fila = 2
+
         self.grid_tarjetas.setRowStretch(fila, 1)
 
     def _agregar_seccion_stem(self, fila, nombre_limpio,nombre,wav, clase_analizador,alfabeto,formato):
         try:
-            ruta = os.path.join("pistas_separadas",nombre_limpio,"htdemucs", nombre_limpio, wav)
+            ruta = os.path.join(resolver_carpeta_stems(nombre_limpio), wav)
             if not os.path.exists(ruta):
                 return False
 
@@ -468,5 +479,3 @@ class ClasificacionHMM(QWidget):
         self.listas_pistas.clear()
         for pista in lista:
             self.listas_pistas.addItem(pista)
-
-                
