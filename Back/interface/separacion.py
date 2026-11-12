@@ -1,9 +1,9 @@
 import os
 import sqlite3
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout
-from PyQt6.QtCore import Qt
-from PyQt6.QtCore import QUrl
-from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QGroupBox
+)
+from PyQt6.QtCore import Qt, QUrl, QTimer
 from PyQt6.QtMultimedia import QMediaPlayer
 
 from interface.tarjeta import TarjetaStem
@@ -79,6 +79,7 @@ class Separacion(QWidget):
             tarjeta.player.setSource(QUrl())
         self.estado_stems = {}
         self.buscador.establecer_actual("")
+        self.btn_master_play.setText("▶ Reproducir Todo")
         self.banner.mostrar("La pista que estaba cargada ya no existe en la base de datos.", "AVISO")
 
     def _inicializar_ui(self):
@@ -104,6 +105,67 @@ class Separacion(QWidget):
         self.banner = BannerEstados()
         layout_principal.addWidget(self.banner)
 
+        # Panel de Reproducción / Pausa Simultánea de los 4 Stems
+        grupo_mezcla = QGroupBox("Reproducción Simultánea (Mezcla de los 4 Stems)")
+        grupo_mezcla.setStyleSheet("""
+            QGroupBox {
+                color: #1db954;
+                font-weight: bold;
+                font-size: 13px;
+                border: 1px solid #2a2a2a;
+                border-radius: 8px;
+                margin-top: 4px;
+                padding-top: 14px;
+            }
+        """)
+        layout_mezcla = QHBoxLayout(grupo_mezcla)
+        layout_mezcla.setSpacing(10)
+
+        self.btn_master_play = QPushButton("▶ Reproducir Todo")
+        self.btn_master_play.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_master_play.setStyleSheet("""
+            QPushButton {
+                background-color: #1db954;
+                color: #ffffff;
+                font-weight: bold;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #1ed760;
+            }
+        """)
+        self.btn_master_play.clicked.connect(self.toggle_reproduccion_simultanea)
+        layout_mezcla.addWidget(self.btn_master_play)
+
+        self.btn_master_stop = QPushButton("⏹ Detener Todo")
+        self.btn_master_stop.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_master_stop.setStyleSheet("""
+            QPushButton {
+                background-color: #2b2b2b;
+                color: #e0e0e0;
+                font-weight: bold;
+                border: 1px solid #3d3d3d;
+                border-radius: 6px;
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #383838;
+                color: #ffffff;
+            }
+        """)
+        self.btn_master_stop.clicked.connect(self.detener_reproduccion_simultanea)
+        layout_mezcla.addWidget(self.btn_master_stop)
+
+        lbl_tip = QLabel("Usa los controles independientes arriba de cada stem para volumen o silencio.")
+        lbl_tip.setStyleSheet("color: #a0a0a0; font-size: 12px; border: none;")
+        layout_mezcla.addWidget(lbl_tip)
+        layout_mezcla.addStretch()
+
+        layout_principal.addWidget(grupo_mezcla)
+
         self.tarjetas_stems = {}
 
         stems_config = {
@@ -122,8 +184,53 @@ class Separacion(QWidget):
                 lambda estado, n=nombre: self._al_cambiar_estado_media(n, estado))
             tarjeta.player.errorOccurred.connect(
                 lambda error, mensaje, n=nombre: self._al_error_media(n, mensaje))
+            tarjeta.player.playbackStateChanged.connect(self._sincronizar_boton_maestro)
 
         self.setLayout(layout_principal)
+
+    def toggle_reproduccion_simultanea(self):
+        if not self.pista_actual:
+            GestorDiagnostico.mostrar_advertencia(
+                self, "Sin pista", "Primero selecciona una pista para reproducir."
+            )
+            return
+
+        reproduciendo_alguno = any(
+            tarjeta.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+            for tarjeta in self.tarjetas_stems.values()
+        )
+
+        if reproduciendo_alguno:
+            # Pausar todos manteniendo la posición actual
+            for tarjeta in self.tarjetas_stems.values():
+                tarjeta.player.pause()
+            self.btn_master_play.setText("▶ Reproducir Todo")
+        else:
+            # Reproducir todos (sincronizados por el primer stem válido o manteniéndose donde estaban)
+            tarjetas_validas = [
+                t for t in self.tarjetas_stems.values() if not t.player.source().isEmpty()
+            ]
+            if not tarjetas_validas:
+                return
+
+            posicion_actual = tarjetas_validas[0].player.position()
+            for tarjeta in tarjetas_validas:
+                tarjeta.player.setPosition(posicion_actual)
+                tarjeta.player.play()
+
+            self.btn_master_play.setText("⏸ Pausar Todo")
+
+    def detener_reproduccion_simultanea(self):
+        for tarjeta in self.tarjetas_stems.values():
+            tarjeta.player.stop()
+        self.btn_master_play.setText("▶ Reproducir Todo")
+
+    def _sincronizar_boton_maestro(self, _estado):
+        reproduciendo_alguno = any(
+            tarjeta.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+            for tarjeta in self.tarjetas_stems.values()
+        )
+        self.btn_master_play.setText("⏸ Pausar Todo" if reproduciendo_alguno else "▶ Reproducir Todo")
 
     def _al_cambiar_estado_media(self, nombre_stem, estado):
         if nombre_stem not in self.estado_stems or self.estado_stems[nombre_stem] is not None:
@@ -183,6 +290,7 @@ class Separacion(QWidget):
 
         self.pista_actual = nombre_pista
         self.buscador.establecer_actual(nombre_pista)
+        self.btn_master_play.setText("▶ Reproducir Todo")
 
         base_path = resolver_carpeta_stems(nombre_pista)
 
@@ -212,7 +320,6 @@ class Separacion(QWidget):
                     tarjeta.player.setSource(QUrl())
                     tarjeta.cargar_archivo_stem(ruta_completa)
                     print(f" Stem cargado con éxito ({nombre_stem})")
-
                 else:
                     print(f"Archivo no encontrado en disco para {nombre_stem}")
                     tarjeta.player.stop()

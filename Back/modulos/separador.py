@@ -25,7 +25,7 @@ class _EscritorProgreso:
 
     def __init__(self, callback):
         self.callback = callback
-        self.destino = sys.stderr  # normalmente el archivo de log
+        self.destino = sys.stderr
 
     def write(self, texto):
         coincidencias = _PATRON_PORCENTAJE.findall(texto)
@@ -53,7 +53,6 @@ class MotorSeparacion:
         self.ruta_salida = None
 
     def volumen_audio(self, ruta_entrada, ruta_salida=None, target_rms_db=-20.0):
-
         ruta_salida = ruta_salida or os.path.join(config.CARPETA_TEMPORAL, "temp_normalizado.wav")
         try:
             y, sr = librosa.load(ruta_entrada, sr=None)
@@ -83,8 +82,14 @@ class MotorSeparacion:
 
     # ------------------------------------------------------------------ Demucs
     def _demucs_subproceso(self, ruta_audio, destino, callback_progreso):
-        """Modo desarrollo: `python -m demucs.separate` en un proceso aparte."""
-        comando = [sys.executable, "-m", "demucs.separate", "-n", "htdemucs", "-o", destino, ruta_audio]
+        """Modo desarrollo con parámetros optimizados de alta calidad (--overlap 0.25)."""
+        comando = [
+            sys.executable, "-m", "demucs.separate", 
+            "-n", "htdemucs", 
+            "--overlap", "0.25", 
+            "-o", destino, 
+            ruta_audio
+        ]
         proceso = subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                    text=True, bufsize=1)
         try:
@@ -113,15 +118,18 @@ class MotorSeparacion:
                 proceso.stdout.close()
 
     def _demucs_en_proceso(self, ruta_audio, destino, callback_progreso):
-        """Modo ejecutable: dentro del .exe `sys.executable` ES la aplicación, así que
-        lanzar `-m demucs.separate` abriría otra copia de la ventana en lugar de Demucs.
-        Por eso aquí se llama a Demucs directamente, como librería."""
+        """Modo ejecutable con parámetros optimizados de alta calidad (--overlap 0.25)."""
         from demucs.separate import main as demucs_main
         escritor = _EscritorProgreso(callback_progreso)
         try:
             with contextlib.redirect_stderr(escritor), contextlib.redirect_stdout(escritor):
-                demucs_main(["-n", "htdemucs", "-o", destino, ruta_audio])
-        except SystemExit as salida:  # Demucs usa sys.exit() para sus errores
+                demucs_main([
+                    "-n", "htdemucs", 
+                    "--overlap", "0.25", 
+                    "-o", destino, 
+                    ruta_audio
+                ])
+        except SystemExit as salida:
             if salida.code not in (0, None):
                 raise RuntimeError("El proceso de separacion con Demucs fallo")
 
@@ -151,7 +159,7 @@ class MotorSeparacion:
         directorio_destino = ruta_dentro_de(self.carpeta_base_salida, nombre_cancion)
         os.makedirs(directorio_destino, exist_ok=True)
 
-        print("Separando stems...")
+        print("Separando stems (Alta Calidad)...")
 
         try:
             if config.EMPAQUETADO:

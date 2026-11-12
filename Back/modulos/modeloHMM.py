@@ -51,7 +51,7 @@ class ClasificadorEstructuraHMM:
             self.modelos_por_genero[genero] = modelo
             print(f"Modelo entrenado con éxito: '{genero}' ({len(secuencias)} pistas)")
 
-    def predecir_genero(self, cadena_bat, cadena_voz, cadena_bajo, cadena_otros):
+    def predecir_genero_con_porcentajes(self, cadena_bat, cadena_voz, cadena_bajo, cadena_otros):
         if not self.modelos_por_genero:
             return "Sin modelos entrenados", {}
 
@@ -68,5 +68,15 @@ class ClasificadorEstructuraHMM:
             except Exception:
                 scores[genero] = float('-inf')
 
-        genero_predicho = max(scores, key=scores.get)
-        return genero_predicho, scores
+        scores_validos = {g: s for g, s in scores.items() if s != float('-inf')}
+        if not scores_validos:
+            return "Desconocido", {}
+
+        max_score = max(scores_validos.values()) 
+        exp_scores = {g: np.exp(s - max_score) for g, s in scores_validos.items()}
+        suma_exp = sum(exp_scores.values())
+
+        porcentajes = {g: (exp / suma_exp) * 100 for g, exp in exp_scores.items()}
+        
+        genero_predicho = max(scores_validos, key=scores_validos.get)
+        return genero_predicho, porcentajes
